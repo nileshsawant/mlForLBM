@@ -1,0 +1,87 @@
+# LBM Neural Network Project - Machine Learning for Lattice Boltzmann Method
+# Exclude large simulation outputs and temporary files
+
+# Large simulation outputs
+plt*/
+chk*/
+*.bin
+*.h5
+*.hdf5
+
+# ML training data (large files)
+ml_training_data/
+results/
+validation/
+validation_seed6/
+
+# Neural network models and predictions
+*.keras
+lbm_flow_predictor*.h5
+*_nn_predictions.npz
+
+# ParaView output files
+paraview_vtk/
+paraview_vtu/
+*.vtk
+*.vtu
+*.pvd
+
+# Temporary and cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Conda environment files
+environment.yml.backup
+
+# Log files
+*.log
+*.out
+*.err
+validation_output.log
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# Large geometry files (keep seed1 and seed6 for examples)
+microstructure_nX60_nY40_nZ30_seed[2-5].csv
+microstructure_nX60_nY40_nZ30_seed[7-9].csv
+microstructure_nX60_nY40_nZ30_seed1[0-9].csv
+
+# AMReX/plotfile outputs
+Backtrace.*
+
+# Profiling outputs
+*.TPROF*
+
+# Temporary input files
+validation_case_*.inp

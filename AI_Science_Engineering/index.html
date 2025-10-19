@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI in the Sciences and Engineering (2024) - Course Materials</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #374151;
+            margin-top: 30px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 15px;
+        }
+        .course-info {
+            background: #eff6ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .lecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .lecture-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+        .lecture-item:hover {
+            background: #e0f2fe;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .lecture-number {
+            background: #3b82f6;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .lecture-title {
+            margin: 10px 0 5px 0;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .pdf-link {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9em;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .pdf-link:hover {
+            background: #b91c1c;
+        }
+        .tutorial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .tutorial-item {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+        .tutorial-item:hover {
+            background: #dcfce7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .notebook-link {
+            display: inline-block;
+            background: #059669;
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9em;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .notebook-link:hover {
+            background: #047857;
+        }
+        .resource-links {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .resource-link {
+            display: inline-block;
+            background: #f59e0b;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px 10px 5px 0;
+            transition: background 0.3s;
+        }
+        .resource-link:hover {
+            background: #d97706;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+        .file-size {
+            color: #6b7280;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 AI in the Sciences and Engineering (2024)</h1>
+        
+        <div class="course-info">
+            <h3>📚 Course Information</h3>
+            <p><strong>Institution:</strong> ETH Zurich</p>
+            <p><strong>Department:</strong> Computational and Applied Mathematics Laboratory (CAMLab)</p>
+            <p><strong>Instructors:</strong> Prof. Dr. Siddhartha Mishra, Dr. Benjamin Moseley</p>
+            <p><strong>Teaching Assistants:</strong> Victor Armegioiu, Bogdan Raonic</p>
+            <p><strong>Downloaded:</strong> September 1, 2025</p>
+            <p><strong>Download Method:</strong> <span style="background: #dbeafe; padding: 2px 6px; border-radius: 3px; color: #1e40af;">Automated Course Downloader Scripts</span></p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number">24</div>
+                <div class="stat-label">Lecture Slides</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">13</div>
+                <div class="stat-label">Tutorial Notebooks</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">157MB</div>
+                <div class="stat-label">Total Size</div>
+            </div>
+        </div>
+
+        <h2>📖 Lecture Slides</h2>
+        <div class="lecture-grid">
+            <div class="lecture-item">
+                <span class="lecture-number">01</span>
+                <div class="lecture-title">Course Introduction</div>
+                <div class="file-size">15.9 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 01 Course Introduction.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">02</span>
+                <div class="lecture-title">Introduction to Deep Learning Part 1</div>
+                <div class="file-size">8.9 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 02 Introduction to Deep Learning Part 1.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">03</span>
+                <div class="lecture-title">Introduction to Deep Learning Part 2</div>
+                <div class="file-size">4.6 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 03 Introduction to Deep Learning Part 2.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">04</span>
+                <div class="lecture-title">Importance of PDEs in Science</div>
+                <div class="file-size">15.9 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 04 Importance of PDEs in Science.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">05</span>
+                <div class="lecture-title">Physics-Informed Neural Networks – Introduction</div>
+                <div class="file-size">5.4 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 05 Physics-Informed Neural Networks – Introduction.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">06</span>
+                <div class="lecture-title">Physics-Informed Neural Networks – Limitations and Extensions Part 1</div>
+                <div class="file-size">7.5 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 06 Physics-Informed Neural Networks – Limitations and Extensions Part 1.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">07</span>
+                <div class="lecture-title">Physics-Informed Neural Networks – Limitations and Extensions Part 2</div>
+                <div class="file-size">12.1 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 07 Physics-Informed Neural Networks – Limitations and Extensions Part 2.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">08-09</span>
+                <div class="lecture-title">Physics-Informed Neural Networks – Theory Part 1 and 2</div>
+                <div class="file-size">4.9 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 08 09 Physics-Informed Neural Networks – Theory Part 1 and 2.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">10</span>
+                <div class="lecture-title">Introduction to Operator Learning Part 1</div>
+                <div class="file-size">4.3 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 10 Introduction to Operator Learning Part 1.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">11</span>
+                <div class="lecture-title">Introduction to Operator Learning Part 2</div>
+                <div class="file-size">3.6 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 11 Introduction to Operator Learning Part 2.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">12</span>
+                <div class="lecture-title">Fourier Neural Operators</div>
+                <div class="file-size">2.3 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 12 Fourier Neural Operators.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">13</span>
+                <div class="lecture-title">Spectral Neural Operators and Deep Operator Networks</div>
+                <div class="file-size">2.1 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 13 Spectral Neural Operators and Deep Operator Networks.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">14</span>
+                <div class="lecture-title">Convolutional Neural Operators</div>
+                <div class="file-size">5.6 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 14 Convolutional Neural Operators.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">15</span>
+                <div class="lecture-title">Time-Dependent Neural Operators</div>
+                <div class="file-size">1.8 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 15 Time-Dependent Neural Operators.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">16</span>
+                <div class="lecture-title">Large-Scale Neural Operators</div>
+                <div class="file-size">7.8 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 16 Large-Scale Neural Operators.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">17</span>
+                <div class="lecture-title">Attention as a Neural Operator</div>
+                <div class="file-size">1.2 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 17 Attention as a Neural Operator.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">18</span>
+                <div class="lecture-title">Windowed Attention and Scaling Laws</div>
+                <div class="file-size">1.5 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 18 Windowed Attention and Scaling Laws.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">19</span>
+                <div class="lecture-title">Introduction to Hybrid Workflows Part 1</div>
+                <div class="file-size">3.3 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 19 Introduction to Hybrid Workflows Part 1.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">20</span>
+                <div class="lecture-title">Introduction to Hybrid Workflows Part 2</div>
+                <div class="file-size">4.0 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 20 Introduction to Hybrid Workflows Part 2.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">21</span>
+                <div class="lecture-title">Neural Differential Equations</div>
+                <div class="file-size">4.0 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 21 Neural Differential Equations.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">22</span>
+                <div class="lecture-title">Introduction to Diffusion Models</div>
+                <div class="file-size">3.1 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 22 Introduction to Diffusion Models.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">23</span>
+                <div class="lecture-title">Introduction to JAX</div>
+                <div class="file-size">5.1 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 23 Introduction to JAX.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">24</span>
+                <div class="lecture-title">Symbolic Regression and Model Discovery</div>
+                <div class="file-size">5.2 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 24 Symbolic Regression and Model Discovery.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+            
+            <div class="lecture-item">
+                <span class="lecture-number">25-26</span>
+                <div class="lecture-title">Applications of AI in Chemistry and Biology Part 1 and 2</div>
+                <div class="file-size">14.2 MB</div>
+                <a href="AISE2024_Course_Materials/AISE24 25 26 Applications of AI in Chemistry and Biology Part 1 and 2.pdf" class="pdf-link">📄 View PDF</a>
+            </div>
+        </div>
+
+        <h2>💻 Tutorial Notebooks</h2>
+        <div class="tutorial-grid">
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial 01 - Function Approximation with PyTorch</div>
+                <p>Learn the basics of function approximation using PyTorch neural networks.</p>
+                <a href="AI_Science_Engineering/Tutorial 01 - Function Approximation with Pytorch.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial 02 - Cross Validation and Intro to CNNs</div>
+                <p>Introduction to cross-validation techniques and convolutional neural networks.</p>
+                <a href="AI_Science_Engineering/Tutorial 02 - Cross Validation and Intro to CNNs.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial 03 - PINN Training</div>
+                <p>Hands-on training of Physics-Informed Neural Networks.</p>
+                <a href="AI_Science_Engineering/Tutorial 03 - PINN Training.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial 04 - PINNs for Inverse Problems</div>
+                <p>Using PINNs to solve inverse problems in scientific computing.</p>
+                <a href="AI_Science_Engineering/Tutorial 04 - PINNs for Inverse Problems .ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial 05 - Operator Learning - Fourier Neural Operator</div>
+                <p>Implementation and training of Fourier Neural Operators.</p>
+                <a href="AI_Science_Engineering/Tutorial 05 - Operator Learing - Fourier Neural Operator.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial 06 - Operator Learning - Convolutional Neural Operator</div>
+                <p>Working with Convolutional Neural Operators for PDE solving.</p>
+                <a href="AI_Science_Engineering/Tutorial 06 - Operator Learing - Convolutional Neural Operator.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial 07 - Introduction to Graph Neural Networks</div>
+                <p>Graph Neural Networks for scientific applications.</p>
+                <a href="AI_Science_Engineering/Tutorial 07 - Introduction to Graph Neural Networks.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial 08 - Vision Transformers for solving PDEs</div>
+                <p>Using Vision Transformers to solve partial differential equations.</p>
+                <a href="AI_Science_Engineering/Tutorial 08 - Vision Transformers for solving PDEs.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial 10 - Coding Autodiff</div>
+                <p>Build automatic differentiation from scratch.</p>
+                <a href="AI_Science_Engineering/Tutorial 10 - Coding Autodiff.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial 11 - Introduction to JAX, NDEs and diffusion models</div>
+                <p>JAX, Neural Differential Equations, and diffusion models.</p>
+                <a href="AI_Science_Engineering/Tutorial 11 - Introduction to JAX, NDEs and diffusion models.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial New - Time Dependent CNO</div>
+                <p>Time-dependent Convolutional Neural Operators.</p>
+                <a href="AI_Science_Engineering/Tutorial New - Time Dependent CNO.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+            
+            <div class="tutorial-item">
+                <div class="lecture-title">Tutorial New - Transfer Learning for PDEs</div>
+                <p>Transfer learning techniques for partial differential equations.</p>
+                <a href="AI_Science_Engineering/Tutorial New - Transfer Learning for PDEs.ipynb" class="notebook-link">📓 Open Notebook</a>
+            </div>
+        </div>
+
+        <h2>🤖 Course Downloader Scripts</h2>
+        <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #0c4a6e;">📋 Automated Course Material Downloader</h3>
+            <p>This course was downloaded using our custom-built course downloader scripts! You can use these same tools to download materials from other educational websites.</p>
+            
+            <div style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <h4 style="margin-top: 0;">🚀 Quick Usage:</h4>
+                <code style="background: #f1f5f9; padding: 10px; border-radius: 4px; display: block; font-family: monospace;">
+                    ./download_course.sh "https://any-course-website.edu/course"
+                </code>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0;">
+                <a href="course_downloader.py" style="background: #059669; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; text-align: center;">🐍 Python Script</a>
+                <a href="download_course.sh" style="background: #dc2626; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; text-align: center;">📜 Bash Script</a>
+                <a href="README_Course_Downloader.md" style="background: #7c3aed; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; text-align: center;">📖 Documentation</a>
+                <a href="demo.sh" style="background: #f59e0b; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; text-align: center;">🎮 Demo</a>
+            </div>
+            
+            <details style="margin-top: 15px;">
+                <summary style="cursor: pointer; font-weight: bold; color: #0c4a6e;">📋 What the scripts can download automatically:</summary>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>✅ PDF lecture slides and materials</li>
+                    <li>✅ GitHub repositories with code and notebooks</li>
+                    <li>✅ Jupyter tutorial notebooks</li>
+                    <li>✅ Datasets and training files</li>
+                    <li>✅ Course webpages and metadata</li>
+                    <li>✅ Beautiful offline index pages (like this one!)</li>
+                </ul>
+            </details>
+        </div>
+
+        <h2>🔗 External Resources</h2>
+        <div class="resource-links">
+            <a href="https://www.youtube.com/playlist?list=PLJkYEExhe7rYFkBIB2U5pf_RWzYnFLj7r" class="resource-link" target="_blank">🎥 YouTube Lectures</a>
+            <a href="https://camlab.ethz.ch/teaching/ai-in-the-sciences-and-engineering-2024.html" class="resource-link" target="_blank">🌐 Course Website</a>
+            <a href="https://github.com/camlab-ethz/AI_Science_Engineering" class="resource-link" target="_blank">📁 GitHub Repository</a>
+            <a href="AISE2024_Course_Materials/course_page.html" class="resource-link">📄 Original Course Page</a>
+        </div>
+
+        <h2>📁 Additional Files</h2>
+        <ul>
+            <li><a href="AI_Science_Engineering/datasets/">📊 Datasets Directory</a> - Training data for tutorials</li>
+            <li><a href="AI_Science_Engineering/engine.py">⚙️ Engine.py</a> - Helper functions for tutorials</li>
+            <li><a href="AI_Science_Engineering/readme.md">📖 Repository README</a> - Course overview and instructions</li>
+        </ul>
+
+        <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280;">
+            <p>AI in the Sciences and Engineering (2024) - ETH Zurich</p>
+            <p>Downloaded and organized for offline access using automated course downloader scripts</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">
+                🤖 <strong>Reusable Tools:</strong> 
+                <a href="course_downloader.py" style="color: #3b82f6;">Python Script</a> | 
+                <a href="download_course.sh" style="color: #3b82f6;">Bash Script</a> | 
+                <a href="README_Course_Downloader.md" style="color: #3b82f6;">Documentation</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
