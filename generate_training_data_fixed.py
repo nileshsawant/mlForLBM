@@ -440,8 +440,18 @@ if __name__ == "__main__":
             print(f"  {key} = {input_params[key]}")
     
     print("\n" + "="*50)
-    print("To generate full training data, run:")
-    print("  generate_all_training_data('isothermal_cracks.inp')")
-    print("\nTo run all simulations, run:")
-    print("  run_all_simulations()")
-    print("\nThis will create 125 simulation cases with parameter sweeps and geometries.")
+    print("Generating all training data automatically...")
+    print("This will create 125 simulation cases with parameter sweeps and geometries.")
+    
+    # Actually run the training data generation
+    generate_all_training_data('isothermal_cracks.inp')
+    
+    print("\n" + "="*50)
+    print("Now running all LBM simulations...")
+    print("This will take approximately 30-60 minutes...")
+    
+    # Run all the simulations
+    successful_runs = run_all_simulations()
+    
+    print(f"\nTraining data generation and simulation complete!")
+    print(f"Successfully completed {successful_runs} simulations")

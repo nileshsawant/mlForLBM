@@ -9,15 +9,20 @@ import glob
 
 def remove_emojis(text):
     """Remove emojis from text"""
-    # Define emoji pattern (covers most common emojis)
+    # Define comprehensive emoji pattern (covers most common emojis)
     emoji_pattern = re.compile(
         "["
         "\U0001F600-\U0001F64F"  # emoticons
-        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+        "\U0001F300-\U0001F5FF"  # symbols & pictographs  
         "\U0001F680-\U0001F6FF"  # transport & map symbols
         "\U0001F1E0-\U0001F1FF"  # flags (iOS)
-        "\U00002702-\U000027B0"  # dingbats
-        "\U000024C2-\U0001F251"
+        "\U00002700-\U000027BF"  # dingbats
+        "\U0001F900-\U0001F9FF"  # supplemental symbols
+        "\U00002600-\U000026FF"  # miscellaneous symbols
+        "\U0001F000-\U0001F02F"  # mahjong tiles
+        "\U0001F0A0-\U0001F0FF"  # playing cards
+        "\U000024C2-\U0001F251"  # enclosed characters
+        ""  # specific emojis used
         "]+", flags=re.UNICODE)
     
     return emoji_pattern.sub('', text)

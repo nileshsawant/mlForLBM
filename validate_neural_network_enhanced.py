@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """
-Neural Network Validation Script for LBM Thermal Flow
+Enhanced Neural Network Validation Script for LBM Thermal Flow
+
+This script validates the ENHANCED neural network model with adaptive learning rate.
+
+Changes from baseline validation:
+- Uses enhanced model: lbm_flow_predictor_cno-inspired_enhanced.h5
+- All other validation logic remains identical
 
 This script:
 1. Selects validation parameter sets within training range
 2. Runs full LBM simulations for validation cases
-3. Generates neural network predictions for same parameters
+3. Generates neural network predictions using ENHANCED model
 4. Compares errors over all timesteps
 5. Produces comprehensive validation metrics and plots
 
-Author: Generated for LBM-ML validation
+Author: Generated for Enhanced LBM-ML validation
 """
 
 import os
@@ -62,7 +68,7 @@ def select_validation_parameters():
                     'nu_value': nu,
                     'temp_value': temp,
                     'geom_id': geom_id,
-                    'case_name': f"validation_case_{case_id:03d}_nu_{nu:.5f}_temp_{temp:.3f}_geom_{geom_id}"
+                    'case_name': f"validation_enhanced_case_{case_id:03d}_nu_{nu:.5f}_temp_{temp:.3f}_geom_{geom_id}"
                 })
                 case_id += 1
     
@@ -104,18 +110,18 @@ def create_validation_input_file(case_info, template_file="isothermal_cracks.inp
 
 def run_lbm_simulation(case_info):
     """
-    Run LBM simulation for validation case in organized validation directory
+    Run LBM simulation for validation case in organized validation_enhanced directory
     """
     case_name = case_info['case_name']
     
     print(f" Running LBM simulation: {case_name}")
     print(f"   Parameters: nu={case_info['nu_value']:.6f}, T={case_info['temp_value']:.3f}, geom={case_info['geom_id']}")
     
-    # Create main validation directory if it doesn't exist
-    main_validation_dir = "validation"
+    # Create main validation_enhanced directory if it doesn't exist
+    main_validation_dir = "validation_enhanced"
     os.makedirs(main_validation_dir, exist_ok=True)
     
-    # Create case-specific directory under validation/
+    # Create case-specific directory under validation_enhanced/
     case_dir = os.path.join(main_validation_dir, case_name)
     
     # Clean and recreate case directory
@@ -160,7 +166,7 @@ def run_lbm_simulation(case_info):
         os.chdir(original_dir)
         
         if result.returncode == 0:
-            print(f"    Simulation completed successfully")
+            print(f"     Simulation completed successfully")
             
             # Count output files
             plt_files = [f for f in os.listdir(case_dir) if f.startswith('plt') and os.path.isdir(os.path.join(case_dir, f))]
@@ -168,7 +174,7 @@ def run_lbm_simulation(case_info):
             
             return True, case_dir
         else:
-            print(f"    Simulation failed with return code {result.returncode}")
+            print(f"     Simulation failed with return code {result.returncode}")
             print(f"   Error: {result.stderr}")
             return False, None
             
@@ -178,28 +184,40 @@ def run_lbm_simulation(case_info):
         return False, None
     except Exception as e:
         os.chdir(original_dir)  # Make sure we return to original directory
-        print(f"    Simulation error: {e}")
+        print(f"     Simulation error: {e}")
         return False, None
 
-def load_trained_model():
+def load_enhanced_trained_model():
     """
-    Load the trained neural network model
-    Handle Keras compatibility issues by rebuilding model and loading weights
+    Load the ENHANCED trained neural network model
+    
+    CHANGE: Specifically looks for enhanced model files first
     """
-    model_files = [
+    # ENHANCED MODEL FILES (prioritized)
+    enhanced_model_files = [
+        'lbm_flow_predictor_cno-inspired_enhanced.h5',
+        'lbm_flow_predictor_cno_inspired_enhanced.h5', 
+        'lbm_flow_predictor_enhanced.h5'
+    ]
+    
+    # Fallback to baseline models if enhanced not found
+    baseline_model_files = [
         'lbm_flow_predictor_cno-inspired.h5',
         'lbm_flow_predictor_cno_inspired.h5', 
         'lbm_flow_predictor.h5'
     ]
     
-    for model_file in model_files:
+    all_model_files = enhanced_model_files + baseline_model_files
+    
+    for i, model_file in enumerate(all_model_files):
         if os.path.exists(model_file):
-            print(f" Loading trained model: {model_file}")
+            model_type = " ENHANCED" if i < len(enhanced_model_files) else "  BASELINE"
+            print(f" Loading trained model: {model_file} ({model_type})")
             
             try:
                 # Try direct loading first
                 model = keras.models.load_model(model_file)
-                return model
+                return model, model_type
             except Exception as e:
                 print(f"     Direct loading failed: {e}")
                 print("    Attempting to rebuild model and load weights...")
@@ -209,31 +227,31 @@ def load_trained_model():
                     sys.path.append('.')
                     
                     # Try to recreate the CNO model that was likely saved
-                    from train_lbm_neural_network import create_ultra_efficient_cno_model
+                    from train_lbm_neural_network_enhanced import create_ultra_efficient_cno_model
                     
                     # Recreate the model architecture
                     model = create_ultra_efficient_cno_model()
                     
                     # Load only the weights
                     model.load_weights(model_file)
-                    print(f"    Successfully loaded weights into rebuilt model")
-                    return model
+                    print(f"     Successfully loaded weights into rebuilt model")
+                    return model, model_type
                     
                 except Exception as e2:
                     print(f"    Weight loading failed: {e2}")
                     
                     # Try the efficient CNN model instead
                     try:
-                        from train_lbm_neural_network import create_lbm_cnn_model
+                        from train_lbm_neural_network_enhanced import create_lbm_cnn_model
                         model = create_lbm_cnn_model()
                         model.load_weights(model_file)
-                        print(f"    Successfully loaded weights into CNN model")
-                        return model
+                        print(f"     Successfully loaded weights into CNN model")
+                        return model, model_type
                     except Exception as e3:
                         print(f"    CNN weight loading failed: {e3}")
                         continue
     
-    raise FileNotFoundError(" No trained model could be loaded! Please run training first.")
+    raise FileNotFoundError(" No trained model could be loaded! Please run enhanced training first.")
 
 def predict_with_neural_network(model, case_info, timesteps):
     """
@@ -313,8 +331,8 @@ def predict_with_neural_network(model, case_info, timesteps):
         'temperature_fields': temperature_pred # Shape: (timesteps, 60, 40, 30, 1)
     }
     
-    # Save neural network predictions to disk
-    nn_output_dir = f"validation/neural_network_predictions"
+    # Save neural network predictions to enhanced validation directory
+    nn_output_dir = f"validation_enhanced/neural_network_predictions"
     os.makedirs(nn_output_dir, exist_ok=True)
     
     nn_output_file = os.path.join(nn_output_dir, f"{case_name}_nn_predictions.npz")
@@ -329,8 +347,8 @@ def predict_with_neural_network(model, case_info, timesteps):
                        temperature_fields=temperature_pred,
                        case_info=case_info)
     
-    print(f"    Generated predictions for {num_timesteps} timesteps")
-    print(f"    Saved predictions to {nn_output_file}")
+    print(f"     Generated predictions for {num_timesteps} timesteps")
+    print(f"     Saved predictions to {nn_output_file}")
     return prediction_data
 
 def process_lbm_simulation_data(output_dir):
@@ -408,11 +426,11 @@ def process_lbm_simulation_data(output_dir):
         for key in ['velocity_fields', 'heat_flux_fields', 'density_fields', 'energy_fields', 'temperature_fields']:
             simulation_data[key] = np.array(simulation_data[key])
         
-        print(f"    Processed {len(plt_files)} timesteps")
+        print(f"     Processed {len(plt_files)} timesteps")
         return simulation_data
         
     except Exception as e:
-        print(f"    Error processing simulation data: {e}")
+        print(f"     Error processing simulation data: {e}")
         return None
 
 def compute_validation_metrics(lbm_data, nn_data, case_info):
@@ -487,16 +505,16 @@ def compute_validation_metrics(lbm_data, nn_data, case_info):
                 'timestep_r2': timestep_r2
             }
     
-    print(f"    Computed metrics for {len(field_names)} fields")
+    print(f"     Computed metrics for {len(field_names)} fields")
     return metrics
 
-def create_validation_plots(validation_results, output_dir="validation/plots"):
+def create_validation_plots(validation_results, output_dir="validation_enhanced/plots"):
     """
-    Create comprehensive validation plots
+    Create comprehensive validation plots for enhanced model
     """
     os.makedirs(output_dir, exist_ok=True)
     
-    print(f" Creating validation plots in {output_dir}")
+    print(f" Creating enhanced validation plots in {output_dir}")
     
     # Set up plotting style
     plt.style.use('seaborn-v0_8')
@@ -506,7 +524,7 @@ def create_validation_plots(validation_results, output_dir="validation/plots"):
     
     # 1. Overall metrics comparison across cases
     fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-    fig.suptitle('Validation Metrics Across All Cases', fontsize=16, fontweight='bold')
+    fig.suptitle('ENHANCED Model - Validation Metrics Across All Cases', fontsize=16, fontweight='bold')
     
     metrics_to_plot = ['mse', 'rmse', 'mae', 'r2_score', 'mean_relative_error']
     
@@ -548,7 +566,7 @@ def create_validation_plots(validation_results, output_dir="validation/plots"):
         axes[1, 2].remove()
     
     plt.tight_layout()
-    plt.savefig(f'{output_dir}/overall_metrics_comparison.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'{output_dir}/enhanced_overall_metrics_comparison.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # 2. Temporal evolution plots for each case
@@ -557,7 +575,7 @@ def create_validation_plots(validation_results, output_dir="validation/plots"):
         case_name = case_info['case_name']
         
         fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-        fig.suptitle(f'Temporal Evolution - {case_name}\\nnu={case_info["nu_value"]:.6f}, T={case_info["temp_value"]:.3f}', 
+        fig.suptitle(f'ENHANCED Model - Temporal Evolution - {case_name}\\nnu={case_info["nu_value"]:.6f}, T={case_info["temp_value"]:.3f}', 
                     fontsize=14, fontweight='bold')
         
         for i, field in enumerate(field_names):
@@ -588,16 +606,16 @@ def create_validation_plots(validation_results, output_dir="validation/plots"):
         axes[1, 2].remove()
         
         plt.tight_layout()
-        plt.savefig(f'{output_dir}/temporal_evolution_{case_name}.png', dpi=300, bbox_inches='tight')
+        plt.savefig(f'{output_dir}/enhanced_temporal_evolution_{case_name}.png', dpi=300, bbox_inches='tight')
         plt.close()
     
-    print(f"    Created validation plots")
+    print(f"     Created enhanced validation plots")
 
-def save_validation_report(validation_results, report_file="validation/validation_report.json"):
+def save_validation_report(validation_results, report_file="validation_enhanced/enhanced_validation_report.json"):
     """
-    Save comprehensive validation report
+    Save comprehensive enhanced validation report
     """
-    print(f" Saving validation report: {report_file}")
+    print(f" Saving enhanced validation report: {report_file}")
     
     # Convert numpy arrays to lists for JSON serialization
     def convert_arrays(obj):
@@ -615,13 +633,13 @@ def save_validation_report(validation_results, report_file="validation/validatio
     with open(report_file, 'w') as f:
         json.dump(report_data, f, indent=2, default=str)
     
-    print(f"    Validation report saved")
+    print(f"     Enhanced validation report saved")
 
 def main():
     """
-    Main validation pipeline
+    Main enhanced validation pipeline
     """
-    print(" LBM Neural Network Validation Pipeline")
+    print(" Enhanced LBM Neural Network Validation Pipeline")
     print("=" * 60)
     
     # Step 1: Select validation parameters
@@ -630,32 +648,33 @@ def main():
     for case in validation_cases:
         print(f"   Case {case['case_id']}: nu={case['nu_value']:.6f}, T={case['temp_value']:.3f}, geom={case['geom_id']}")
     
-    # Step 2: Load trained model
+    # Step 2: Load enhanced trained model
     try:
-        model = load_trained_model()
-        print(f"   Model parameters: {model.count_params():,}")
+        model, model_type = load_enhanced_trained_model()
+        print(f"    Model parameters: {model.count_params():,}")
+        print(f"    Model type: {model_type}")
     except Exception as e:
-        print(f" Failed to load model: {e}")
+        print(f" Failed to load enhanced model: {e}")
         return
     
     # Step 3: Run validation for each case
     validation_results = []
     
     for case_info in validation_cases:
-        print(f"\\n Validating Case {case_info['case_id']}")
+        print(f"\\n Validating Enhanced Case {case_info['case_id']}")
         print("-" * 40)
         
         try:
             # Run LBM simulation
             success, output_dir = run_lbm_simulation(case_info)
             if not success:
-                print(f"     Skipping case {case_info['case_id']} - simulation failed")
+                print(f"      Skipping case {case_info['case_id']} - simulation failed")
                 continue
             
             # Process LBM data
             lbm_data = process_lbm_simulation_data(output_dir)
             if lbm_data is None:
-                print(f"     Skipping case {case_info['case_id']} - data processing failed")
+                print(f"      Skipping case {case_info['case_id']} - data processing failed")
                 continue
             
             # Generate neural network predictions
@@ -672,10 +691,10 @@ def main():
                 'metrics': metrics
             })
             
-            print(f"    Case {case_info['case_id']} validation completed")
+            print(f"     Case {case_info['case_id']} enhanced validation completed")
             
         except Exception as e:
-            print(f"    Error in case {case_info['case_id']}: {e}")
+            print(f"     Error in case {case_info['case_id']}: {e}")
             continue
     
     # Step 4: Create validation plots and report
@@ -684,7 +703,7 @@ def main():
         save_validation_report(validation_results)
         
         # Print summary
-        print(f"\\n VALIDATION SUMMARY")
+        print(f"\\n ENHANCED VALIDATION SUMMARY")
         print("=" * 60)
         print(f"Completed validation cases: {len(validation_results)}/{len(validation_cases)}")
         
@@ -703,9 +722,9 @@ def main():
                 avg_rmse = np.mean(field_rmse_values)
                 print(f"{field.title():>12}: R² = {avg_r2:.4f}, RMSE = {avg_rmse:.6f}")
         
-        print(f"\\n Validation completed! Check 'validation/plots/' for detailed results.")
+        print(f"\\n Enhanced validation completed! Check 'validation_enhanced/plots/' for detailed results.")
     else:
-        print(" No successful validation cases!")
+        print(" No successful enhanced validation cases!")
 
 if __name__ == "__main__":
     main()

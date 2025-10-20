@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 """
-Neural Network Validation Script for LBM Thermal Flow
+Enhanced Neural Network Validation Script for LBM Thermal Flow - UNSEEN GEOMETRY SEED 6
+
+This script validates the ENHANCED neural network model on UNSEEN geometry (seed 6).
+
+Changes from baseline validation:
+- Uses enhanced model: lbm_flow_predictor_cno-inspired_enhanced.h5
+- Tests on UNSEEN geometry seed 6 (not used in training)
+- Output directory: validation_seed6_enhanced/
 
 This script:
 1. Selects validation parameter sets within training range
-2. Runs full LBM simulations for validation cases
-3. Generates neural network predictions for same parameters
+2. Runs full LBM simulations for validation cases with UNSEEN geometry seed 6
+3. Generates neural network predictions using ENHANCED model
 4. Compares errors over all timesteps
-5. Produces comprehensive validation metrics and plots
+5. Produces comprehensive validation metrics and plots for GENERALIZATION testing
 
-Author: Generated for LBM-ML validation
+Author: Generated for Enhanced LBM-ML generalization validation
 """
 
 import os
@@ -38,7 +45,7 @@ def select_validation_parameters():
     - temp_values = [0.02, 0.03, 0.04, 0.05, 0.06]
     - geom_ids = [1, 2, 3, 4, 5]
     
-    Select intermediate values for robust validation
+    Select intermediate values for robust validation - USING UNSEEN GEOMETRY SEED 6
     """
     
     # Select 2 nu values (intermediate points)
@@ -47,8 +54,8 @@ def select_validation_parameters():
     # Select 2 temperature values (intermediate points) 
     temp_validation = [0.025, 0.045]   # Between training points
     
-    # Select 1 geometry (middle of range)
-    geom_validation = [3]  # Middle geometry
+    # Select 1 geometry (UNSEEN SEED 6 - NOT USED IN TRAINING)
+    geom_validation = [6]  # UNSEEN GEOMETRY FOR GENERALIZATION TESTING
     
     # Create all combinations: 2×2×1 = 4 validation cases
     validation_cases = []
@@ -62,7 +69,7 @@ def select_validation_parameters():
                     'nu_value': nu,
                     'temp_value': temp,
                     'geom_id': geom_id,
-                    'case_name': f"validation_case_{case_id:03d}_nu_{nu:.5f}_temp_{temp:.3f}_geom_{geom_id}"
+                    'case_name': f"validation_enhanced_seed6_case_{case_id:03d}_nu_{nu:.5f}_temp_{temp:.3f}_geom_{geom_id}"
                 })
                 case_id += 1
     
@@ -70,7 +77,7 @@ def select_validation_parameters():
 
 def create_validation_input_file(case_info, template_file="isothermal_cracks.inp"):
     """
-    Create LBM input file for validation case
+    Create LBM input file for validation case with UNSEEN geometry
     """
     case_name = case_info['case_name']
     
@@ -90,8 +97,8 @@ def create_validation_input_file(case_info, template_file="isothermal_cracks.inp
     content = content.replace('velocity_bc_parabolic.initial_temperature = 0.03333', f'velocity_bc_parabolic.initial_temperature = {case_info["temp_value"]:.5f}')
     content = content.replace('ic_constant.initial_temperature = 0.03333', f'ic_constant.initial_temperature = {case_info["temp_value"]:.5f}')
     
-    # Update geometry file
-    geom_file = f"microstructure_geom_{case_info['geom_id']}.csv"
+    # Update geometry file - CHANGED TO USE UNSEEN SEED 6
+    geom_file = f"microstructure_nX60_nY40_nZ30_seed{case_info['geom_id']}.csv"
     content = content.replace('voxel_cracks.crack_file = "microstructure_nX60_nY40_nZ30_seed1.csv"', 
                              f'voxel_cracks.crack_file = "{geom_file}"')
     
@@ -104,18 +111,18 @@ def create_validation_input_file(case_info, template_file="isothermal_cracks.inp
 
 def run_lbm_simulation(case_info):
     """
-    Run LBM simulation for validation case in organized validation directory
+    Run LBM simulation for validation case with UNSEEN geometry in organized validation directory
     """
     case_name = case_info['case_name']
     
     print(f" Running LBM simulation: {case_name}")
-    print(f"   Parameters: nu={case_info['nu_value']:.6f}, T={case_info['temp_value']:.3f}, geom={case_info['geom_id']}")
+    print(f"    Parameters: nu={case_info['nu_value']:.6f}, T={case_info['temp_value']:.3f}, geom={case_info['geom_id']} ( UNSEEN)")
     
-    # Create main validation directory if it doesn't exist
-    main_validation_dir = "validation"
+    # Create main validation directory - CHANGED TO validation_seed6_enhanced
+    main_validation_dir = "validation_seed6_enhanced"
     os.makedirs(main_validation_dir, exist_ok=True)
     
-    # Create case-specific directory under validation/
+    # Create case-specific directory under validation_seed6_enhanced/
     case_dir = os.path.join(main_validation_dir, case_name)
     
     # Clean and recreate case directory
@@ -130,17 +137,17 @@ def run_lbm_simulation(case_info):
     import shutil
     shutil.copy(input_file, validation_input)
     
-    # Copy required files to case directory
+    # Copy required files to case directory - UPDATED FOR UNSEEN SEED 6
     required_files = [
         "marbles3d.gnu.TPROF.MPI.ex",
-        f"microstructure_geom_{case_info['geom_id']}.csv"
+        f"microstructure_nX60_nY40_nZ30_seed{case_info['geom_id']}.csv"
     ]
     
     for req_file in required_files:
         if os.path.exists(req_file):
             shutil.copy(req_file, case_dir)
         else:
-            print(f"     Warning: Required file not found: {req_file}")
+            print(f"      Warning: Required file not found: {req_file}")
     
     # Run simulation in the isolated case directory
     cmd = f"./marbles3d.gnu.TPROF.MPI.ex {case_name}.inp"
@@ -152,7 +159,7 @@ def run_lbm_simulation(case_info):
         # Change to case directory
         os.chdir(case_dir)
         
-        print(f"    Running in directory: {case_dir}")
+        print(f"     Running in directory: {case_dir}")
         result = subprocess.run(cmd, shell=True, 
                                capture_output=True, text=True, timeout=3600)
         
@@ -160,15 +167,15 @@ def run_lbm_simulation(case_info):
         os.chdir(original_dir)
         
         if result.returncode == 0:
-            print(f"    Simulation completed successfully")
+            print(f"     Simulation completed successfully")
             
             # Count output files
             plt_files = [f for f in os.listdir(case_dir) if f.startswith('plt') and os.path.isdir(os.path.join(case_dir, f))]
-            print(f"    Generated {len(plt_files)} output timesteps in {case_dir}")
+            print(f"     Generated {len(plt_files)} output timesteps in {case_dir}")
             
             return True, case_dir
         else:
-            print(f"    Simulation failed with return code {result.returncode}")
+            print(f"     Simulation failed with return code {result.returncode}")
             print(f"   Error: {result.stderr}")
             return False, None
             
@@ -178,28 +185,40 @@ def run_lbm_simulation(case_info):
         return False, None
     except Exception as e:
         os.chdir(original_dir)  # Make sure we return to original directory
-        print(f"    Simulation error: {e}")
+        print(f"     Simulation error: {e}")
         return False, None
 
-def load_trained_model():
+def load_enhanced_trained_model():
     """
-    Load the trained neural network model
-    Handle Keras compatibility issues by rebuilding model and loading weights
+    Load the ENHANCED trained neural network model
+    
+    CHANGE: Specifically looks for enhanced model files first
     """
-    model_files = [
+    # ENHANCED MODEL FILES (prioritized)
+    enhanced_model_files = [
+        'lbm_flow_predictor_cno-inspired_enhanced.h5',
+        'lbm_flow_predictor_cno_inspired_enhanced.h5', 
+        'lbm_flow_predictor_enhanced.h5'
+    ]
+    
+    # Fallback to baseline models if enhanced not found
+    baseline_model_files = [
         'lbm_flow_predictor_cno-inspired.h5',
         'lbm_flow_predictor_cno_inspired.h5', 
         'lbm_flow_predictor.h5'
     ]
     
-    for model_file in model_files:
+    all_model_files = enhanced_model_files + baseline_model_files
+    
+    for i, model_file in enumerate(all_model_files):
         if os.path.exists(model_file):
-            print(f" Loading trained model: {model_file}")
+            model_type = " ENHANCED" if i < len(enhanced_model_files) else "  BASELINE"
+            print(f" Loading trained model: {model_file} ({model_type})")
             
             try:
                 # Try direct loading first
                 model = keras.models.load_model(model_file)
-                return model
+                return model, model_type
             except Exception as e:
                 print(f"     Direct loading failed: {e}")
                 print("    Attempting to rebuild model and load weights...")
@@ -209,58 +228,60 @@ def load_trained_model():
                     sys.path.append('.')
                     
                     # Try to recreate the CNO model that was likely saved
-                    from train_lbm_neural_network import create_ultra_efficient_cno_model
+                    from train_lbm_neural_network_enhanced import create_ultra_efficient_cno_model
                     
                     # Recreate the model architecture
                     model = create_ultra_efficient_cno_model()
                     
                     # Load only the weights
                     model.load_weights(model_file)
-                    print(f"    Successfully loaded weights into rebuilt model")
-                    return model
+                    print(f"     Successfully loaded weights into rebuilt model")
+                    return model, model_type
                     
                 except Exception as e2:
                     print(f"    Weight loading failed: {e2}")
                     
                     # Try the efficient CNN model instead
                     try:
-                        from train_lbm_neural_network import create_lbm_cnn_model
+                        from train_lbm_neural_network_enhanced import create_lbm_cnn_model
                         model = create_lbm_cnn_model()
                         model.load_weights(model_file)
-                        print(f"    Successfully loaded weights into CNN model")
-                        return model
+                        print(f"     Successfully loaded weights into CNN model")
+                        return model, model_type
                     except Exception as e3:
                         print(f"    CNN weight loading failed: {e3}")
                         continue
     
-    raise FileNotFoundError(" No trained model could be loaded! Please run training first.")
+    raise FileNotFoundError(" No enhanced model could be loaded! Please run enhanced training first.")
 
 def predict_with_neural_network(model, case_info, timesteps):
     """
     Generate neural network predictions for validation case over all timesteps
+    TESTING GENERALIZATION TO UNSEEN GEOMETRY
     """
     case_name = case_info['case_name']
     
     print(f" Generating neural network predictions: {case_name}")
+    print(f"     Testing GENERALIZATION to UNSEEN geometry seed {case_info['geom_id']}")
     
-    # Load geometry
-    geom_file = f"microstructure_geom_{case_info['geom_id']}.csv"
+    # Load geometry - UPDATED FOR UNSEEN SEED 6
+    geom_file = f"microstructure_nX60_nY40_nZ30_seed{case_info['geom_id']}.csv"
     if not os.path.exists(geom_file):
         raise FileNotFoundError(f"Geometry file not found: {geom_file}")
     
     # Load geometry as 3D array with error handling
     try:
         geom_df = pd.read_csv(geom_file)
-        print(f"    Loaded geometry file: {geom_file}")
-        print(f"    Geometry data shape: {geom_df.shape}")
-        print(f"    Columns: {list(geom_df.columns)}")
+        print(f"     Loaded geometry file: {geom_file}")
+        print(f"     Geometry data shape: {geom_df.shape}")
+        print(f"     Columns: {list(geom_df.columns)}")
         
         # Check if we have the expected columns
         if 'x' not in geom_df.columns:
             # Try alternative column names
             if len(geom_df.columns) >= 4:
                 geom_df.columns = ['x', 'y', 'z', 'value']
-                print(f"    Renamed columns to: {list(geom_df.columns)}")
+                print(f"     Renamed columns to: {list(geom_df.columns)}")
             else:
                 raise ValueError(f"Unexpected geometry file format. Columns: {list(geom_df.columns)}")
         
@@ -273,13 +294,14 @@ def predict_with_neural_network(model, case_info, timesteps):
                 if 0 <= x < 60 and 0 <= y < 40 and 0 <= z < 30:
                     geometry_3d[x, y, z] = row['value']
             except (ValueError, KeyError) as row_error:
-                print(f"     Skipping invalid row: {row_error}")
+                print(f"      Skipping invalid row: {row_error}")
                 continue
         
-        print(f"    Loaded geometry with {np.sum(geometry_3d > 0)} solid voxels")
+        solid_voxels = np.sum(geometry_3d > 0)
+        print(f"     Loaded UNSEEN geometry with {solid_voxels} solid voxels")
         
     except Exception as geom_error:
-        print(f"    Geometry loading error: {geom_error}")
+        print(f"     Geometry loading error: {geom_error}")
         raise
     
     # Prepare inputs for all timesteps
@@ -299,6 +321,7 @@ def predict_with_neural_network(model, case_info, timesteps):
         ]
     
     # Generate predictions
+    print(f"     Generating predictions for UNSEEN geometry...")
     predictions = model.predict([geometries, parameters], batch_size=8, verbose=0)
     
     # Unpack predictions (5 physics fields)
@@ -313,8 +336,8 @@ def predict_with_neural_network(model, case_info, timesteps):
         'temperature_fields': temperature_pred # Shape: (timesteps, 60, 40, 30, 1)
     }
     
-    # Save neural network predictions to disk
-    nn_output_dir = f"validation/neural_network_predictions"
+    # Save neural network predictions to enhanced seed6 validation directory
+    nn_output_dir = f"validation_seed6_enhanced/neural_network_predictions"
     os.makedirs(nn_output_dir, exist_ok=True)
     
     nn_output_file = os.path.join(nn_output_dir, f"{case_name}_nn_predictions.npz")
@@ -329,8 +352,8 @@ def predict_with_neural_network(model, case_info, timesteps):
                        temperature_fields=temperature_pred,
                        case_info=case_info)
     
-    print(f"    Generated predictions for {num_timesteps} timesteps")
-    print(f"    Saved predictions to {nn_output_file}")
+    print(f"     Generated predictions for {num_timesteps} timesteps")
+    print(f"     Saved GENERALIZATION predictions to {nn_output_file}")
     return prediction_data
 
 def process_lbm_simulation_data(output_dir):
@@ -348,7 +371,7 @@ def process_lbm_simulation_data(output_dir):
         if not plt_files:
             raise FileNotFoundError(f"No plotfiles found in {output_dir}")
         
-        print(f"   Found {len(plt_files)} timesteps")
+        print(f"    Found {len(plt_files)} timesteps")
         
         simulation_data = {
             'timesteps': [],
@@ -373,7 +396,7 @@ def process_lbm_simulation_data(output_dir):
             # Print available fields for debugging
             if timestep_num == 0:  # Only print for first timestep
                 available_fields = [str(field) for field in ds.field_list]
-                print(f"   Available fields: {available_fields[:10]}...")  # Show first 10 fields
+                print(f"    Available fields: {available_fields[:10]}...")  # Show first 10 fields
             
             # Extract fields on uniform grid
             level = 0
@@ -408,19 +431,19 @@ def process_lbm_simulation_data(output_dir):
         for key in ['velocity_fields', 'heat_flux_fields', 'density_fields', 'energy_fields', 'temperature_fields']:
             simulation_data[key] = np.array(simulation_data[key])
         
-        print(f"    Processed {len(plt_files)} timesteps")
+        print(f"     Processed {len(plt_files)} timesteps")
         return simulation_data
         
     except Exception as e:
-        print(f"    Error processing simulation data: {e}")
+        print(f"     Error processing simulation data: {e}")
         return None
 
 def compute_validation_metrics(lbm_data, nn_data, case_info):
     """
-    Compute comprehensive validation metrics
+    Compute comprehensive validation metrics for GENERALIZATION testing
     """
     case_name = case_info['case_name']
-    print(f" Computing validation metrics: {case_name}")
+    print(f" Computing GENERALIZATION validation metrics: {case_name}")
     
     metrics = {
         'case_info': case_info,
@@ -487,16 +510,16 @@ def compute_validation_metrics(lbm_data, nn_data, case_info):
                 'timestep_r2': timestep_r2
             }
     
-    print(f"    Computed metrics for {len(field_names)} fields")
+    print(f"     Computed GENERALIZATION metrics for {len(field_names)} fields")
     return metrics
 
-def create_validation_plots(validation_results, output_dir="validation/plots"):
+def create_validation_plots(validation_results, output_dir="validation_seed6_enhanced/plots"):
     """
-    Create comprehensive validation plots
+    Create comprehensive GENERALIZATION validation plots for enhanced model
     """
     os.makedirs(output_dir, exist_ok=True)
     
-    print(f" Creating validation plots in {output_dir}")
+    print(f" Creating enhanced GENERALIZATION validation plots in {output_dir}")
     
     # Set up plotting style
     plt.style.use('seaborn-v0_8')
@@ -506,7 +529,7 @@ def create_validation_plots(validation_results, output_dir="validation/plots"):
     
     # 1. Overall metrics comparison across cases
     fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-    fig.suptitle('Validation Metrics Across All Cases', fontsize=16, fontweight='bold')
+    fig.suptitle('ENHANCED Model - GENERALIZATION Validation (UNSEEN Geometry Seed 6)', fontsize=16, fontweight='bold')
     
     metrics_to_plot = ['mse', 'rmse', 'mae', 'r2_score', 'mean_relative_error']
     
@@ -548,7 +571,7 @@ def create_validation_plots(validation_results, output_dir="validation/plots"):
         axes[1, 2].remove()
     
     plt.tight_layout()
-    plt.savefig(f'{output_dir}/overall_metrics_comparison.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'{output_dir}/enhanced_generalization_metrics_comparison.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # 2. Temporal evolution plots for each case
@@ -557,7 +580,7 @@ def create_validation_plots(validation_results, output_dir="validation/plots"):
         case_name = case_info['case_name']
         
         fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-        fig.suptitle(f'Temporal Evolution - {case_name}\\nnu={case_info["nu_value"]:.6f}, T={case_info["temp_value"]:.3f}', 
+        fig.suptitle(f'ENHANCED Model - GENERALIZATION Temporal Evolution\\n{case_name}\\nnu={case_info["nu_value"]:.6f}, T={case_info["temp_value"]:.3f} - UNSEEN GEOMETRY', 
                     fontsize=14, fontweight='bold')
         
         for i, field in enumerate(field_names):
@@ -588,16 +611,16 @@ def create_validation_plots(validation_results, output_dir="validation/plots"):
         axes[1, 2].remove()
         
         plt.tight_layout()
-        plt.savefig(f'{output_dir}/temporal_evolution_{case_name}.png', dpi=300, bbox_inches='tight')
+        plt.savefig(f'{output_dir}/enhanced_generalization_temporal_evolution_{case_name}.png', dpi=300, bbox_inches='tight')
         plt.close()
     
-    print(f"    Created validation plots")
+    print(f"     Created enhanced GENERALIZATION validation plots")
 
-def save_validation_report(validation_results, report_file="validation/validation_report.json"):
+def save_validation_report(validation_results, report_file="validation_seed6_enhanced/enhanced_generalization_validation_report.json"):
     """
-    Save comprehensive validation report
+    Save comprehensive enhanced GENERALIZATION validation report
     """
-    print(f" Saving validation report: {report_file}")
+    print(f" Saving enhanced GENERALIZATION validation report: {report_file}")
     
     # Convert numpy arrays to lists for JSON serialization
     def convert_arrays(obj):
@@ -615,47 +638,48 @@ def save_validation_report(validation_results, report_file="validation/validatio
     with open(report_file, 'w') as f:
         json.dump(report_data, f, indent=2, default=str)
     
-    print(f"    Validation report saved")
+    print(f"     Enhanced GENERALIZATION validation report saved")
 
 def main():
     """
-    Main validation pipeline
+    Main enhanced validation pipeline - TESTING GENERALIZATION ON UNSEEN GEOMETRY
     """
-    print(" LBM Neural Network Validation Pipeline")
-    print("=" * 60)
+    print(" Enhanced LBM Neural Network Validation Pipeline - GENERALIZATION TESTING (UNSEEN SEED 6)")
+    print("=" * 90)
     
     # Step 1: Select validation parameters
     validation_cases = select_validation_parameters()
-    print(f" Selected {len(validation_cases)} validation cases:")
+    print(f" Selected {len(validation_cases)} GENERALIZATION validation cases:")
     for case in validation_cases:
-        print(f"   Case {case['case_id']}: nu={case['nu_value']:.6f}, T={case['temp_value']:.3f}, geom={case['geom_id']}")
+        print(f"   Case {case['case_id']}: nu={case['nu_value']:.6f}, T={case['temp_value']:.3f}, geom={case['geom_id']} ( UNSEEN)")
     
-    # Step 2: Load trained model
+    # Step 2: Load enhanced trained model
     try:
-        model = load_trained_model()
-        print(f"   Model parameters: {model.count_params():,}")
+        model, model_type = load_enhanced_trained_model()
+        print(f"    Model parameters: {model.count_params():,}")
+        print(f"    Model type: {model_type}")
     except Exception as e:
-        print(f" Failed to load model: {e}")
+        print(f" Failed to load enhanced model: {e}")
         return
     
     # Step 3: Run validation for each case
     validation_results = []
     
     for case_info in validation_cases:
-        print(f"\\n Validating Case {case_info['case_id']}")
-        print("-" * 40)
+        print(f"\\n Enhanced GENERALIZATION Validation - Case {case_info['case_id']}")
+        print("-" * 60)
         
         try:
             # Run LBM simulation
             success, output_dir = run_lbm_simulation(case_info)
             if not success:
-                print(f"     Skipping case {case_info['case_id']} - simulation failed")
+                print(f"      Skipping case {case_info['case_id']} - simulation failed")
                 continue
             
             # Process LBM data
             lbm_data = process_lbm_simulation_data(output_dir)
             if lbm_data is None:
-                print(f"     Skipping case {case_info['case_id']} - data processing failed")
+                print(f"      Skipping case {case_info['case_id']} - data processing failed")
                 continue
             
             # Generate neural network predictions
@@ -672,10 +696,10 @@ def main():
                 'metrics': metrics
             })
             
-            print(f"    Case {case_info['case_id']} validation completed")
+            print(f"     Case {case_info['case_id']} enhanced GENERALIZATION validation completed")
             
         except Exception as e:
-            print(f"    Error in case {case_info['case_id']}: {e}")
+            print(f"     Error in case {case_info['case_id']}: {e}")
             continue
     
     # Step 4: Create validation plots and report
@@ -684,8 +708,8 @@ def main():
         save_validation_report(validation_results)
         
         # Print summary
-        print(f"\\n VALIDATION SUMMARY")
-        print("=" * 60)
+        print(f"\\n ENHANCED GENERALIZATION VALIDATION SUMMARY (UNSEEN GEOMETRY)")
+        print("=" * 90)
         print(f"Completed validation cases: {len(validation_results)}/{len(validation_cases)}")
         
         # Average metrics across all cases
@@ -703,9 +727,10 @@ def main():
                 avg_rmse = np.mean(field_rmse_values)
                 print(f"{field.title():>12}: R² = {avg_r2:.4f}, RMSE = {avg_rmse:.6f}")
         
-        print(f"\\n Validation completed! Check 'validation/plots/' for detailed results.")
+        print(f"\\n Enhanced GENERALIZATION validation completed! Check 'validation_seed6_enhanced/plots/' for results.")
+        print(f" This tests enhanced neural network GENERALIZATION to completely new crack geometry!")
     else:
-        print(" No successful validation cases!")
+        print(" No successful enhanced GENERALIZATION validation cases!")
 
 if __name__ == "__main__":
     main()
