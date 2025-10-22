@@ -46,8 +46,7 @@ mlForLBM/
 ├── convert_nn_to_vtu.py                   # Convert predictions → ParaView
 ├── convert_nn_to_vtu_enhanced.py          # Convert enhanced predictions → ParaView
 ├── view_nn_predictions.py                 # Analyze neural network outputs
-├── debug_npz_structure.py                 # Debug prediction files
-└── remove_emojis.py                       # Clean up script output
+└── debug_npz_structure.py                 # Debug prediction files
 ```
 
 ## Quick Start
