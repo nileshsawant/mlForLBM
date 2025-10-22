@@ -91,10 +91,9 @@ def create_validation_input_file(case_info, template_file="isothermal_cracks.inp
     alpha_value = case_info["nu_value"] / 0.7
     content = content.replace('lbm.alpha = 6.938e-3', f'lbm.alpha = {alpha_value:.6e}')
     
+    # FIXED: Only change body_temperature to match training data behavior
+    # All other temperature parameters should remain at reference value (0.03333)
     content = content.replace('lbm.body_temperature = 0.03333', f'lbm.body_temperature = {case_info["temp_value"]:.5f}')
-    content = content.replace('lbm.initial_temperature = 0.03333', f'lbm.initial_temperature = {case_info["temp_value"]:.5f}')
-    content = content.replace('velocity_bc_parabolic.initial_temperature = 0.03333', f'velocity_bc_parabolic.initial_temperature = {case_info["temp_value"]:.5f}')
-    content = content.replace('ic_constant.initial_temperature = 0.03333', f'ic_constant.initial_temperature = {case_info["temp_value"]:.5f}')
     
     # Update geometry file
     geom_file = f"microstructure_geom_{case_info['geom_id']}.csv"

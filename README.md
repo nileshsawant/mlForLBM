@@ -168,6 +168,40 @@ python convert_nn_to_vtu_enhanced.py
 | Overfitting | Manual stopping | Auto early stop | Prevented |
 | Validation Loss | 0.074 | 0.006 | 92% reduction |
 
+## 🚀 Easy-to-Use Prediction Script
+
+For quick predictions with custom parameters, use the all-in-one script:
+
+```bash
+# Basic usage with default parameters
+python predict_and_visualize.py --geometry microstructure_nX60_nY40_nZ30_seed1.csv
+
+# Custom parameters
+python predict_and_visualize.py \
+    --geometry microstructure_nX60_nY40_nZ30_seed6.csv \
+    --nu 0.005 \
+    --temperature 0.035 \
+    --timesteps 21 \
+    --output my_prediction
+
+# See all options and examples
+python predict_and_visualize.py --examples
+```
+
+**What it does:**
+- ✅ Loads the enhanced neural network model automatically
+- ✅ Takes your geometry file and parameters as input
+- ✅ Generates predictions for specified timesteps
+- ✅ Converts to ParaView VTU format ready for visualization
+- ✅ Provides clear instructions for opening in ParaView
+
+**Parameters:**
+- `--geometry`: Your geometry CSV file (required)
+- `--nu`: Viscosity (0.00194-0.00810, default: 0.00324)
+- `--temperature`: Temperature (0.02-0.06, default: 0.035)  
+- `--timesteps`: Number of time points (default: 11)
+- `--output`: Custom output name (auto-generated if not specified)
+
 ### 5. Enhanced Model Files
 
 After training, you'll have:

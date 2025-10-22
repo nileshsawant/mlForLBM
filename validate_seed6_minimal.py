@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 """
-Neural Network Validation Script for LBM Thermal Flow - UNSEEN GEOMETRY SEED 6
+Neural Network Validation Script for LBM Thermal Flow -     # Calculate alpha = nu / Prandtl (Prandtl = 0.7 for air)
+    alpha_value = case_info["nu_value"] / 0.7
+    content = content.replace('lbm.alpha = 6.938e-3', f'lbm.alpha = {alpha_value:.6e}')
+    
+    # FIXED: Only change body_temperature to match training data behavior
+    # All other temperature parameters should remain at reference value (0.03333)
+    content = content.replace('lbm.body_temperature = 0.03333', f'lbm.body_temperature = {case_info["temp_value"]:.5f}')
+    
+    # Update geometry file - UPDATED FOR SEED 6METRY SEED 6
 
 This script:
 1. Selects validation parameter sets within training range
