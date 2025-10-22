@@ -11,7 +11,6 @@ This directory contains all the lecture slides from the ETH Zurich course 'AI in
 ## Contents
 -       24 lecture slide PDFs
 - Course webpage (course_page.html)
-- Lecture table data (table1.json, table2.json)
 
 ## Lecture Topics
      1	01 Course Introduction
@@ -39,21 +38,10 @@ This directory contains all the lecture slides from the ETH Zurich course 'AI in
     23	24 Symbolic Regression and Model Discovery
     24	25 26 Applications of AI in Chemistry and Biology Part 1 and 2
 
-## Total Size
-157M
-
-Downloaded on: Mon Sep  1 11:38:52 MDT 2025
-
-
 
 ## GitHub Repository
 The course tutorial exercises are available in the GitHub repository:
 - **Repository**: https://github.com/camlab-ethz/AI_Science_Engineering
-- **Location**: ../AI_Science_Engineering/
-- **Contents**: 
-  - 13 Jupyter notebook tutorials
-  - Datasets for exercises (Allen-Cahn, PDE data)
-  - Helper functions (engine.py)
 
 ### Tutorial List:
      1	01 - Function Approximation with Pytorch
@@ -71,6 +59,4 @@ The course tutorial exercises are available in the GitHub repository:
 
 ### Additional Resources:
 - **YouTube Lectures**: https://www.youtube.com/playlist?list=PLJkYEExhe7rYFkBIB2U5pf_RWzYnFLj7r
-- **Course Repository**: Cloned to ../AI_Science_Engineering/
-- **Datasets**: Pre-loaded in the repository
 
