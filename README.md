@@ -1,6 +1,11 @@
-# Machine Learning for Lattice Boltzmann Method (LBM)
+# Create an AI clone of your CFD model
 
-A complete pipeline for training neural networks to predict thermal flow through complex crack geometries using Lattice Boltzmann Method simulations.
+<video width="800" controls>
+  <source src="velocity_cracks.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+A complete pipeline for training neural networks to predict flow and temperature fields. Tested for complex crack geometries using Lattice Boltzmann Method simulations. The test case setup in this example is from https://github.com/nileshsawant/marblesThermal/tree/backup-before-reset/Tests/test_files/isothermal_cracks 
 
 ## Overview
 
