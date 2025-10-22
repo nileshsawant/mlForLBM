@@ -8,6 +8,10 @@ chk*/
 *.h5
 *.hdf5
 
+# Exceptions: Include specific trained model files
+!lbm_flow_predictor_cno-inspired.h5
+!lbm_flow_predictor_cno-inspired_enhanced.h5
+
 # ML training data (large files)
 ml_training_data/
 results/
@@ -16,7 +20,6 @@ validation_seed6/
 
 # Neural network models and predictions
 *.keras
-lbm_flow_predictor*.h5
 *_nn_predictions.npz
 
 # ParaView output files
