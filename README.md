@@ -1,6 +1,7 @@
 # Create an AI clone of your CFD model
 
-![Velocity Cracks Demo](velocity_cracks.mp4)
+![Velocity Cracks Demo](velocity_cracks.gif)
+*Animation credit: [@eyoung55](https://github.com/eyoung55)*
 
 A complete pipeline for training neural networks to predict flow and temperature fields. Tested for complex crack geometries using Lattice Boltzmann Method simulations. The test case setup in this example is from https://github.com/nileshsawant/marblesThermal/tree/backup-before-reset/Tests/test_files/isothermal_cracks 
 
