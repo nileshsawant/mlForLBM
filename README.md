@@ -1,5 +1,8 @@
 # Create an AI clone of your CFD model
 
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+[![GitHub](https://img.shields.io/badge/GitHub-nileshsawant%2FmlForLBM-blue)](https://github.com/nileshsawant/mlForLBM)
+
 ![Velocity Cracks Demo](velocity_cracks.gif)
 *Animation credit: [@eyoung55](https://github.com/eyoung55)*
 
@@ -217,11 +220,11 @@ temperature_out = Dense(60*40*30*1)(x)   # Scalars
 
 ### Physics Fields
 
-1. **Velocity** (m/s): 3D flow velocity field
-2. **Heat Flux** (W/m²): 3D thermal flux field
-3. **Density** (kg/m³): Fluid density field
-4. **Energy** (J/m³): Internal energy density
-5. **Temperature** (K): Temperature field
+1. **Velocity** : 3D flow velocity field
+2. **Heat Flux** : 3D thermal flux field
+3. **Density** : Fluid density field
+4. **Energy** : Total energy field
+5. **Temperature** : Temperature field
 
 ### Enhanced Neural Network Architecture
 
@@ -456,7 +459,30 @@ If you use this code, please cite:
 
 ## License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License**.
+
+### What this means:
+
+** You ARE allowed to:**
+- Use this code for research, education, and personal projects
+- Share and redistribute the code
+- Modify and adapt the code for your needs
+- Build upon this work
+
+** You are NOT allowed to:**
+- Use this code for commercial purposes
+- Sell products or services based on this code
+
+** Attribution Requirements:**
+When using this code, you must:
+- Credit the original author: **Nilesh Sawant**
+- Link to this repository: `https://github.com/nileshsawant/mlForLBM`
+- Indicate if you made changes to the original code
+
+** Commercial Use:**
+For commercial licensing, please contact the author.
+
+For full terms, see: https://creativecommons.org/licenses/by-nc/4.0/
 
 ## Contact
 
