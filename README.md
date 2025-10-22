@@ -479,9 +479,6 @@ When using this code, you must:
 - Link to this repository: `https://github.com/nileshsawant/mlForLBM`
 - Indicate if you made changes to the original code
 
-** Commercial Use:**
-For commercial licensing, please contact the author.
-
 For full terms, see: https://creativecommons.org/licenses/by-nc/4.0/
 
 ## Contact
