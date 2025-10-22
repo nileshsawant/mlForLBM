@@ -8,9 +8,6 @@ This directory contains all the lecture slides from the ETH Zurich course 'AI in
 - **Instructors**: Prof. Dr. Siddhartha Mishra, Dr. Benjamin Moseley
 - **Course URL**: https://camlab.ethz.ch/teaching/ai-in-the-sciences-and-engineering-2024.html
 
-## Contents
--       24 lecture slide PDFs
-- Course webpage (course_page.html)
 
 ## Lecture Topics
      1	01 Course Introduction
