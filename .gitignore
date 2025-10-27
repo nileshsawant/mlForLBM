@@ -1,6 +1,10 @@
 # LBM Neural Network Project - Machine Learning for Lattice Boltzmann Method
 # Exclude large simulation outputs and temporary files
 
+# Course materials and tutorials
+AI_Science_Engineering/
+marblesThermal/
+
 # Large simulation outputs
 plt*/
 chk*/
@@ -11,12 +15,22 @@ chk*/
 # Exceptions: Include specific trained model files
 !lbm_flow_predictor_cno-inspired.h5
 !lbm_flow_predictor_cno-inspired_enhanced.h5
+!lbm_flow_predictor_physics_aware.h5
 
 # ML training data (large files)
 ml_training_data/
 results/
 validation/
 validation_seed6/
+validation_enhanced/
+validation_physics_aware/
+
+# Large validation result files
+*validation_results.json
+*validation_report.json
+physics_aware_validation_results.json
+enhanced_validation_report.json
+physics_aware_validation_report.json
 
 # Neural network models and predictions
 *.keras

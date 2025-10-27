@@ -1,0 +1,10 @@
+{
+  "velocity_scale": 0.056212592869997025,
+  "heat_flux_scale": 0.014332222752273083,
+  "density_log_mean": -11.927987098693848,
+  "density_log_std": 4.7401933670043945,
+  "energy_log_mean": -12.169853210449219,
+  "energy_log_std": 4.1319708824157715,
+  "temp_log_mean": -12.385798454284668,
+  "temp_log_std": 3.5914273262023926
+}
