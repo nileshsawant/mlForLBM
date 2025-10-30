@@ -197,10 +197,13 @@ If you use this code, please cite:
 
 ```bibtex
 @software{sawant2025_lbm_ml,
-  title={Machine Learning for Lattice Boltzmann Method: Neural Network Prediction of Thermal Flow in Cracked Materials},
+  title={mlForLBM: A neural network framework for transient fluid simulation surrogates},
   author={Sawant, Nilesh},
   year={2025},
-  url={https://github.com/nileshsawant/mlForLBM}
+  url={https://github.com/nileshsawant/mlForLBM},
+  version={0.1},
+  month={10},
+  keywords={machine learning, computational fluid dynamics, lattice boltzmann method, physics-informed neural networks, thermal flow, crack analysis}
 }
 ```
 
