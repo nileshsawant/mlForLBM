@@ -240,3 +240,24 @@ For full terms, see: https://creativecommons.org/licenses/by-nc/4.0/
 - TensorFlow/Keras for neural networks
 - yt-project for data processing
 - ParaView for visualization
+
+## Tools: Converting NN predictions to ParaView VTU
+
+A helper script was added to convert saved neural-network predictions (.npz) into
+ParaView-friendly VTU files. It supports the physics-aware outputs and custom
+predictions created by `predict_and_visualize_physics_aware.py`.
+
+Usage:
+
+```bash
+# Convert physics-aware validation and custom predictions
+python3 convert_nn_to_vtu_physics_aware.py
+```
+
+It will look for prediction files in:
+
+- `validation_physics_aware/neural_network_predictions`
+- `validation_seed6_physics_aware/neural_network_predictions`
+- `custom_predictions_physics_aware`
+
+And write VTU outputs into corresponding `paraview_vtu/` subfolders.
