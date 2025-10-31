@@ -39,23 +39,58 @@ sys.path.append('.')
 
 # --- Ensure geometry for seed 6 is generated ---
 def ensure_seed6_geometry():
+    import shutil
     geom_id = 6
     geom_filename = f"microstructure_geom_{geom_id}.csv"
     expected_output = f"results/microstructure_nX60_nY40_nZ30_seed{geom_id}.csv"
-    if not os.path.exists(geom_filename):
-        print(f"Generating geometry for seed {geom_id} using genCracks...")
-        cmd = ["./genCracks", str(geom_id)]
-        result = subprocess.run(cmd, capture_output=True, text=True, cwd=".")
-        if result.returncode == 0 and os.path.exists(expected_output):
-            shutil.copy2(expected_output, geom_filename)
-            print(f"Generated: {geom_filename}")
-        else:
-            print(f"Error: Could not generate geometry for seed {geom_id}")
-    else:
-        print(f"Geometry file {geom_filename} already exists.")
 
-import shutil
-ensure_seed6_geometry()
+    if os.path.exists(geom_filename):
+        print(f"Geometry file {geom_filename} already exists.")
+        return True
+
+    print(f"Geometry {geom_filename} missing — attempting to generate using genCracks...")
+
+    attempts = [ ['./genCracks', str(geom_id)], ['genCracks', str(geom_id)] ]
+    for idx, cmd in enumerate(attempts, start=1):
+        try:
+            print(f" Attempt {idx}: running: {' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True, cwd='.')
+        except FileNotFoundError:
+            print(f"  Command not found: {cmd[0]}")
+            result = None
+
+        # After running, check for expected output
+        if result is not None and result.returncode == 0:
+            if os.path.exists(expected_output):
+                try:
+                    shutil.copy2(expected_output, geom_filename)
+                    print(f"  Successfully generated and copied {geom_filename}")
+                    return True
+                except Exception as e:
+                    print(f"  Error copying generated file: {e}")
+                    return False
+            else:
+                # Sometimes genCracks may print to stdout the location — check results dir listing
+                if os.path.isdir('results'):
+                    candidates = [f for f in os.listdir('results') if f.endswith(f'seed{geom_id}.csv')]
+                    if candidates:
+                        src = os.path.join('results', candidates[0])
+                        try:
+                            shutil.copy2(src, geom_filename)
+                            print(f"  Found generated file {src} and copied to {geom_filename}")
+                            return True
+                        except Exception as e:
+                            print(f"  Error copying {src}: {e}")
+                            return False
+        else:
+            # Provide debug info
+            if result is not None:
+                print(f"  genCracks exit code: {result.returncode}")
+                if result.stderr:
+                    print(f"  genCracks stderr: {result.stderr.splitlines()[-5:]}")
+
+    print("Failed to generate geometry for seed 6. Please run ./genCracks 6 manually or place the CSV into the repo root.")
+    return False
 
 def select_validation_parameters():
     """
@@ -69,14 +104,51 @@ def select_validation_parameters():
     Select intermediate values for robust validation - USING UNSEEN GEOMETRY SEED 6
     """
     
-    # Select 2 nu values (intermediate points)
-    nu_validation = [0.00259, 0.00567]  # Between training points
-    
-    # Select 2 temperature values (intermediate points) 
-    temp_validation = [0.025, 0.045]   # Between training points
-    
-    # Select 1 geometry (UNSEEN SEED 6 - NOT USED IN TRAINING)
-    geom_validation = [6]  # UNSEEN GEOMETRY FOR GENERALIZATION TESTING
+    # Read reference parameters from template and compute intermediate validation points
+    def read_input_file(filename):
+        params = {}
+        with open(filename, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('#') or not line or '=' not in line:
+                    continue
+                try:
+                    key, value = line.split('=', 1)
+                    key = key.strip()
+                    value = value.strip()
+                    if value.startswith('"') and value.endswith('"'):
+                        value = value[1:-1]
+                    try:
+                        if '.' in value or 'e' in value.lower():
+                            value = float(value)
+                        elif value.isdigit() or (value.startswith('-') and value[1:].isdigit()):
+                            value = int(value)
+                        elif value.lower() in ['true', 'false']:
+                            value = value.lower() == 'true'
+                    except ValueError:
+                        pass
+                    params[key] = value
+                except ValueError:
+                    continue
+        return params
+
+    template = 'isothermal_cracks.inp'
+    ref = read_input_file(template)
+    nu_ref = float(ref.get('lbm.nu', 0.00486))
+    temp_ref = float(ref.get('lbm.body_temperature', 0.03333))
+
+    nu_min, nu_max = nu_ref / 1.5, nu_ref * 1.5
+    temp_min, temp_max = temp_ref / 1.5, temp_ref * 1.5
+
+    nu_values = [nu_min + i * (nu_max - nu_min) / 4 for i in range(5)]
+    temp_values = [temp_min + i * (temp_max - temp_min) / 4 for i in range(5)]
+
+    # Select intermediate indices 1 and 3 for validation
+    nu_validation = [nu_values[1], nu_values[3]]
+    temp_validation = [temp_values[1], temp_values[3]]
+
+    # Use unseen geometry seed 6
+    geom_validation = [6]
     
     # Create all combinations: 2×2×1 = 4 validation cases
     validation_cases = []
@@ -102,32 +174,48 @@ def create_validation_input_file(case_info, template_file="isothermal_cracks.inp
     """
     case_name = case_info['case_name']
     
-    # Read template
+    # Read template lines and perform key-based updates (preserve other formatting)
     with open(template_file, 'r') as f:
-        content = f.read()
-    
-    # Replace parameters
-    content = content.replace('lbm.nu = 4.857e-3', f'lbm.nu = {case_info["nu_value"]:.6e}')
-    
-    # Calculate alpha = nu / Prandtl (Prandtl = 0.7 for air)
+        lines = f.readlines()
+
+    def format_value(val):
+        if isinstance(val, float):
+            if abs(val) < 1e-2 or abs(val) > 1e3:
+                return f"{val:.6e}"
+            else:
+                return f"{val:.6f}"
+        else:
+            return str(val)
+
     alpha_value = case_info["nu_value"] / 0.7
-    content = content.replace('lbm.alpha = 6.938e-3', f'lbm.alpha = {alpha_value:.6e}')
-    
-    content = content.replace('lbm.body_temperature = 0.03333', f'lbm.body_temperature = {case_info["temp_value"]:.5f}')
-    content = content.replace('lbm.initial_temperature = 0.03333', f'lbm.initial_temperature = {case_info["temp_value"]:.5f}')
-    content = content.replace('velocity_bc_parabolic.initial_temperature = 0.03333', f'velocity_bc_parabolic.initial_temperature = {case_info["temp_value"]:.5f}')
-    content = content.replace('ic_constant.initial_temperature = 0.03333', f'ic_constant.initial_temperature = {case_info["temp_value"]:.5f}')
-    
-    # Update geometry file - CHANGED TO USE UNSEEN SEED 6
     geom_file = f"microstructure_geom_{case_info['geom_id']}.csv"
-    content = content.replace('voxel_cracks.crack_file = "microstructure_nX60_nY40_nZ30_seed1.csv"', 
-                             f'voxel_cracks.crack_file = "{geom_file}"')
-    
+
+    out_lines = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith('#') or '=' not in stripped:
+            out_lines.append(line)
+            continue
+
+        key, _ = stripped.split('=', 1)
+        key = key.strip()
+
+        if key == 'lbm.nu':
+            out_lines.append(f"lbm.nu = {format_value(case_info['nu_value'])}\n")
+        elif key == 'lbm.alpha':
+            out_lines.append(f"lbm.alpha = {format_value(alpha_value)}\n")
+        elif key == 'lbm.body_temperature':
+            out_lines.append(f"lbm.body_temperature = {format_value(case_info['temp_value'])}\n")
+        elif key == 'voxel_cracks.crack_file':
+            out_lines.append(f'voxel_cracks.crack_file = "{geom_file}"\n')
+        else:
+            out_lines.append(line)
+
     # Save input file
     input_file = f"{case_name}.inp"
     with open(input_file, 'w') as f:
-        f.write(content)
-    
+        f.writelines(out_lines)
+
     return input_file
 
 def run_lbm_simulation(case_info):
@@ -336,12 +424,28 @@ def predict_with_neural_network(model, case_info, timesteps):
     alpha_value = case_info['nu_value'] / 0.7  # Calculate alpha = nu / Prandtl
     
     for i, t in enumerate(timesteps):
+        # Parameter ordering: [nu, temperature, alpha, time]
         parameters[i] = [
-            case_info['nu_value'], 
+            case_info['nu_value'],
             case_info['temp_value'],
-            alpha_value,  # Correctly calculated alpha
-            t             # normalized time
+            alpha_value,
+            t
         ]
+
+    # Apply saved parameter scaler if available
+    try:
+        import json
+        if os.path.exists('param_scaler.json'):
+            with open('param_scaler.json', 'r') as sf:
+                scaler_info = json.load(sf)
+            mean = np.array(scaler_info['mean'], dtype=np.float32)
+            scale = np.array(scaler_info['scale'], dtype=np.float32)
+            parameters = (parameters - mean) / scale
+            print('Applied saved parameter scaler from param_scaler.json')
+        else:
+            print('No param_scaler.json found; proceeding without parameter scaling')
+    except Exception as e:
+        print(f'Warning: failed to apply saved parameter scaler: {e}')
     
     # Generate predictions
     print(f"     Generating predictions for UNSEEN geometry...")
@@ -670,6 +774,12 @@ def main():
     print(" Enhanced LBM Neural Network Validation Pipeline - GENERALIZATION TESTING (UNSEEN SEED 6)")
     print("=" * 90)
     
+    # Ensure unseen geometry is present (generate or notify)
+    ok = ensure_seed6_geometry()
+    if not ok:
+        print("Aborting: required geometry for seed 6 not available. See message above.")
+        return
+
     # Step 1: Select validation parameters
     validation_cases = select_validation_parameters()
     print(f" Selected {len(validation_cases)} GENERALIZATION validation cases:")

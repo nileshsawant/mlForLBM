@@ -86,9 +86,6 @@ python validate_neural_network_physics_aware.py
 
 # Validation on unseen geometry (generalization test)
 python validate_seed6_minimal_physics_aware.py
-
-# Quick physics violations check
-python validate_physics_aware_model.py
 ```
 
 ### 4. Generate Predictions and Visualize

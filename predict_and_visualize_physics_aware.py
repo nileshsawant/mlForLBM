@@ -149,14 +149,31 @@ def generate_predictions(model, geometry_3d, nu, temperature, timesteps):
     # Create parameters for each timestep (including time as 4th parameter)
     parameters = np.zeros((num_timesteps, 4))
     alpha_value = nu / 0.7  # Calculate alpha = nu / Prandtl
-    
+
     for i, t in enumerate(timesteps):
+        # Note parameter ordering: [nu, temperature, alpha, time]
         parameters[i] = [
-            nu, 
+            nu,
             temperature,
-            alpha_value,  # Correctly calculated alpha
-            t             # normalized time
+            alpha_value,
+            t
         ]
+
+    # Attempt to load saved parameter scaler if available and apply it
+    try:
+        import json
+        if os.path.exists('param_scaler.json'):
+            with open('param_scaler.json', 'r') as sf:
+                scaler_info = json.load(sf)
+            mean = np.array(scaler_info['mean'], dtype=np.float32)
+            scale = np.array(scaler_info['scale'], dtype=np.float32)
+            # Apply scaling: (x - mean) / scale
+            parameters = (parameters - mean) / scale
+            print('Applied saved parameter scaler from param_scaler.json')
+        else:
+            print('No param_scaler.json found; proceeding without parameter scaling')
+    except Exception as e:
+        print(f'Warning: failed to apply saved parameter scaler: {e}')
     
     # Generate predictions
     predictions = model.predict([geometries, parameters], batch_size=8, verbose=0)
@@ -402,31 +419,48 @@ def create_lbm_input_file(nu, temperature, geometry_file, case_name, template_fi
     """
     if not os.path.exists(template_file):
         raise FileNotFoundError(f"Template file not found: {template_file}")
-    
-    # Read template
+    # Read template lines and perform key-based updates (preserve other formatting)
     with open(template_file, 'r') as f:
-        content = f.read()
-    
-    # Replace parameters
-    content = content.replace('lbm.nu = 4.857e-3', f'lbm.nu = {nu:.6e}')
-    
-    # Calculate alpha = nu / Prandtl (Prandtl = 0.7 for air)
+        lines = f.readlines()
+
+    def format_value(val):
+        if isinstance(val, float):
+            if abs(val) < 1e-2 or abs(val) > 1e3:
+                return f"{val:.6e}"
+            else:
+                return f"{val:.6f}"
+        else:
+            return str(val)
+
     alpha_value = nu / 0.7
-    content = content.replace('lbm.alpha = 6.938e-3', f'lbm.alpha = {alpha_value:.6e}')
-    
-    # FIXED: Only change body_temperature to match training data behavior
-    # All other temperature parameters should remain at reference value (0.03333)
-    content = content.replace('lbm.body_temperature = 0.03333', f'lbm.body_temperature = {temperature:.5f}')
-    
-    # Update geometry file
-    content = content.replace('voxel_cracks.crack_file = "microstructure_nX60_nY40_nZ30_seed1.csv"', 
-                             f'voxel_cracks.crack_file = "{os.path.basename(geometry_file)}"')
-    
+    geom_basename = os.path.basename(geometry_file)
+
+    out_lines = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith('#') or '=' not in stripped:
+            out_lines.append(line)
+            continue
+
+        key, _ = stripped.split('=', 1)
+        key = key.strip()
+
+        if key == 'lbm.nu':
+            out_lines.append(f"lbm.nu = {format_value(nu)}\n")
+        elif key == 'lbm.alpha':
+            out_lines.append(f"lbm.alpha = {format_value(alpha_value)}\n")
+        elif key == 'lbm.body_temperature':
+            out_lines.append(f"lbm.body_temperature = {format_value(temperature)}\n")
+        elif key == 'voxel_cracks.crack_file':
+            out_lines.append(f'voxel_cracks.crack_file = "{geom_basename}"\n')
+        else:
+            out_lines.append(line)
+
     # Save input file
     input_file = f"{case_name}.inp"
     with open(input_file, 'w') as f:
-        f.write(content)
-    
+        f.writelines(out_lines)
+
     return input_file
 
 def run_lbm_simulation(nu, temperature, geometry_file, case_name, executable_path, timeout, output_dir):

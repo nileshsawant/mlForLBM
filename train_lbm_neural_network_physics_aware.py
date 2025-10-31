@@ -187,7 +187,8 @@ def load_ml_training_data(data_dir="ml_training_data", max_cases=None, sample_ti
                 
                 # Store data
                 geometries.append(geometry_3d)
-                parameters.append([nu_val, alpha_val, temp_val, time_val])
+                # NOTE: parameter ordering is standardized to [nu, temperature, alpha, time]
+                parameters.append([nu_val, temp_val, alpha_val, time_val])
                 
                 # Stack components
                 velocity_fields.append(np.stack([velx, vely, velz], axis=-1))
@@ -566,6 +567,18 @@ def train_physics_aware_model(training_data, validation_split=0.2, epochs=100, b
     # Normalize parameters
     param_scaler = StandardScaler()
     parameters_scaled = param_scaler.fit_transform(parameters)
+
+    # Save fitted parameter scaler (mean and scale) for inference
+    try:
+        scaler_info = {
+            'mean': param_scaler.mean_.tolist(),
+            'scale': param_scaler.scale_.tolist()
+        }
+        with open('param_scaler.json', 'w') as sf:
+            json.dump(scaler_info, sf, indent=2)
+        print("Saved parameter scaler to 'param_scaler.json'")
+    except Exception as e:
+        print(f"Warning: could not save parameter scaler: {e}")
     
     # Split data
     indices = np.arange(len(geometries))
