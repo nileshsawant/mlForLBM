@@ -37,6 +37,26 @@ from tensorflow import keras
 # Add current directory to path for imports
 sys.path.append('.')
 
+# --- Ensure geometry for seed 6 is generated ---
+def ensure_seed6_geometry():
+    geom_id = 6
+    geom_filename = f"microstructure_geom_{geom_id}.csv"
+    expected_output = f"results/microstructure_nX60_nY40_nZ30_seed{geom_id}.csv"
+    if not os.path.exists(geom_filename):
+        print(f"Generating geometry for seed {geom_id} using genCracks...")
+        cmd = ["./genCracks", str(geom_id)]
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=".")
+        if result.returncode == 0 and os.path.exists(expected_output):
+            shutil.copy2(expected_output, geom_filename)
+            print(f"Generated: {geom_filename}")
+        else:
+            print(f"Error: Could not generate geometry for seed {geom_id}")
+    else:
+        print(f"Geometry file {geom_filename} already exists.")
+
+import shutil
+ensure_seed6_geometry()
+
 def select_validation_parameters():
     """
     Select validation parameters from within training ranges
@@ -99,7 +119,7 @@ def create_validation_input_file(case_info, template_file="isothermal_cracks.inp
     content = content.replace('ic_constant.initial_temperature = 0.03333', f'ic_constant.initial_temperature = {case_info["temp_value"]:.5f}')
     
     # Update geometry file - CHANGED TO USE UNSEEN SEED 6
-    geom_file = f"microstructure_nX60_nY40_nZ30_seed{case_info['geom_id']}.csv"
+    geom_file = f"microstructure_geom_{case_info['geom_id']}.csv"
     content = content.replace('voxel_cracks.crack_file = "microstructure_nX60_nY40_nZ30_seed1.csv"', 
                              f'voxel_cracks.crack_file = "{geom_file}"')
     
@@ -141,7 +161,7 @@ def run_lbm_simulation(case_info):
     # Copy required files to case directory - UPDATED FOR UNSEEN SEED 6
     required_files = [
         "marbles3d.gnu.TPROF.MPI.ex",
-        f"microstructure_nX60_nY40_nZ30_seed{case_info['geom_id']}.csv"
+        f"microstructure_geom_{case_info['geom_id']}.csv"
     ]
     
     for req_file in required_files:
@@ -268,7 +288,7 @@ def predict_with_neural_network(model, case_info, timesteps):
     print(f"     Testing GENERALIZATION to UNSEEN geometry seed {case_info['geom_id']}")
     
     # Load geometry - UPDATED FOR UNSEEN SEED 6
-    geom_file = f"microstructure_nX60_nY40_nZ30_seed{case_info['geom_id']}.csv"
+    geom_file = f"microstructure_geom_{case_info['geom_id']}.csv"
     if not os.path.exists(geom_file):
         raise FileNotFoundError(f"Geometry file not found: {geom_file}")
     

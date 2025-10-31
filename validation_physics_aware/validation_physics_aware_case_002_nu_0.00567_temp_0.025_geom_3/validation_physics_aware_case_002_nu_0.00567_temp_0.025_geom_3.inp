@@ -24,8 +24,8 @@ lbm.dx_outer = 1.0
 lbm.dt_outer = 1.0
 
 #Parameters and unit conversion
-#For air flowing through 6 millimeter crack at 0.1 meters/second
-#Re = D u / nu = 6e-3 * 0.1 / 1.5e-5 = 40
+#For air flowing through 6 millimeter crack at 0.05 meters/second
+#Re = D u / nu = 6e-3 * 0.1 / 1.5e-5 = 20
 
 #Calulating nu in LB units
 # dx = 1 = 1 millimeter. D = 6. Verify in mainCrackGenerator.C that std::vector<myReal> diameterVector{7,   6,   5}
@@ -38,11 +38,11 @@ lbm.dt_outer = 1.0
 #Except in combustion, only ratios of temeprature matter. E.g., T = 2/30 now corresponds to 576 K
 #R has be set in the code as a ratio of R_air, i.e. R=1 corresponds to 287 J/(kg K)
 #Adiabatic exponent for air, gamma=1.4  
-#nu = 6 0.1 sqrt(1.4 1 0.03333) / 40 
+#nu = 6 0.1 sqrt(1.4 1 0.03333) / 20 
 #alpha = nu / Prandtl. Prandtl number is approx 0.7 for air 
 
-lbm.nu = 5.670000e-03
-lbm.alpha = 8.100000e-03
+lbm.nu = 9.720e-3
+lbm.alpha = 13.88e-3
 lbm.initial_temperature = 0.03333
 lbm.adiabatic_exponent = 1.4
 lbm.save_streaming = 0
