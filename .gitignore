@@ -13,8 +13,6 @@ chk*/
 *.hdf5
 
 # Exceptions: Include specific trained model files
-!lbm_flow_predictor_cno-inspired.h5
-!lbm_flow_predictor_cno-inspired_enhanced.h5
 !lbm_flow_predictor_physics_aware.h5
 
 # ML training data (large files)
@@ -22,7 +20,6 @@ ml_training_data/
 results/
 validation/
 validation_seed6/
-validation_enhanced/
 validation_physics_aware/
 
 # Large validation result files
@@ -35,6 +32,10 @@ physics_aware_validation_report.json
 # Neural network models and predictions
 *.keras
 *_nn_predictions.npz
+custom_predictions_physics_aware/
+sample_inputs/
+validation_physics_aware_case_*.inp
+validation_physics_aware_seed6_case_*.inp
 
 # ParaView output files
 paraview_vtk/

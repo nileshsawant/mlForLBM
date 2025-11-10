@@ -14,9 +14,7 @@ Key features:
 Reuses existing validated functions from the repository:
 - Model loading adapted from validate_neural_network_physics_aware.py
 - Geometry processing from predict_with_neural_network()
-- VTU conversion from convert_nn_to_vtu.py
-
-Author: Generated for physics-aware predictions with zero violations
+- VTU conversion handled by convert_nn_to_vtu_physics_aware.py
 """
 
 import os
@@ -35,63 +33,34 @@ import time
 sys.path.append('.')
 
 def load_enhanced_model():
-    """
-    Load the physics-aware trained neural network model
-    Reused from validate_neural_network_physics_aware.py
-    """
-    # PHYSICS-AWARE MODEL FILES (prioritized)
-    physics_aware_model_files = [
+    """Load the physics-aware trained neural network model."""
+    physics_aware_model_files = (
         'lbm_flow_predictor_physics_aware.h5',
-        'best_physics_aware_model.h5'
-    ]
-    
-    # Fallback to enhanced/baseline models if physics-aware not found
-    fallback_model_files = [
-        'lbm_flow_predictor_cno-inspired_enhanced.h5',
-        'lbm_flow_predictor_cno_inspired_enhanced.h5', 
-        'lbm_flow_predictor_enhanced.h5',
-        'lbm_flow_predictor_cno-inspired.h5',
-        'lbm_flow_predictor_cno_inspired.h5', 
-        'lbm_flow_predictor.h5'
-    ]
-    
-    all_model_files = physics_aware_model_files + fallback_model_files
-    
-    for i, model_file in enumerate(all_model_files):
-        if os.path.exists(model_file):
-            model_type = " PHYSICS-AWARE" if i < len(physics_aware_model_files) else " FALLBACK"
-            print(f" Loading {model_type} model: {model_file}")
-            
-            try:
-                # Try loading without compiling (avoid custom loss function issues)
-                model = keras.models.load_model(model_file, compile=False)
-                print(f" Model loaded successfully: {model.count_params():,} parameters")
-                return model
-            except Exception as e:
-                print(f" Direct loading failed: {e}")
-                print(" Attempting to rebuild model and load weights...")
-                
-                try:
-                    # Import the model creation function
-                    from train_lbm_neural_network import create_ultra_efficient_cno_model
-                    
-                    # Recreate the model architecture
-                    model = create_ultra_efficient_cno_model()
-                    model.load_weights(model_file)
-                    print(f" Model rebuilt and weights loaded: {model.count_params():,} parameters")
-                    return model
-                    
-                except Exception as rebuild_error:
-                    print(f" Rebuild failed: {rebuild_error}")
-                    continue
-    
-    raise FileNotFoundError("No compatible model files found! Please train a model first.")
+        'best_physics_aware_model.h5',
+    )
+
+    for model_file in physics_aware_model_files:
+        if not os.path.exists(model_file):
+            continue
+
+        print(f" Loading PHYSICS-AWARE model: {model_file}")
+
+        try:
+            model = keras.models.load_model(model_file, compile=False)
+        except Exception as load_error:
+            raise RuntimeError(
+                f"Failed to load physics-aware model '{model_file}'."
+            ) from load_error
+
+        print(f" Model loaded successfully: {model.count_params():,} parameters")
+        return model
+
+    raise FileNotFoundError(
+        "No physics-aware model found. Run train_lbm_neural_network_physics_aware.py first."
+    )
 
 def load_geometry(geometry_file):
-    """
-    Load geometry from CSV file
-    Adapted from predict_with_neural_network() in validation scripts
-    """
+    """Load geometry CSV used by physics-aware workflows."""
     if not os.path.exists(geometry_file):
         raise FileNotFoundError(f"Geometry file not found: {geometry_file}")
     
@@ -134,10 +103,7 @@ def load_geometry(geometry_file):
         raise
 
 def generate_predictions(model, geometry_3d, nu, temperature, timesteps):
-    """
-    Generate neural network predictions
-    Adapted from predict_with_neural_network() in validation scripts
-    """
+    """Generate physics-aware predictions for the provided parameters."""
     print(f" Generating neural network predictions...")
     print(f"   Parameters: nu={nu:.6f}, temperature={temperature:.3f}")
     print(f"   Timesteps: {len(timesteps)} steps")
@@ -218,10 +184,7 @@ def generate_predictions(model, geometry_3d, nu, temperature, timesteps):
     return prediction_data
 
 def write_vtu_structured_grid(filename, data_dict, dimensions, spacing=(1.0, 1.0, 1.0), origin=(0.0, 0.0, 0.0)):
-    """
-    Write a VTU (VTK Unstructured Grid) file in XML format
-    Reused from convert_nn_to_vtu.py with proper XML formatting
-    """
+    """Write a VTU file (structured grid variant used across physics-aware tools)."""
     nx, ny, nz = dimensions
     num_points = nx * ny * nz
     
@@ -332,10 +295,7 @@ def write_vtu_structured_grid(filename, data_dict, dimensions, spacing=(1.0, 1.0
         f.write('</VTKFile>\n')
 
 def create_paraview_collection_vtu(output_dir, case_name, num_timesteps):
-    """
-    Create ParaView collection (.pvd) file for time series
-    Reused from convert_nn_to_vtu.py
-    """
+    """Create a ParaView collection (.pvd) file for the generated VTU sequence."""
     pvd_file = os.path.join(output_dir, f"{case_name}.pvd")
     
     with open(pvd_file, 'w') as f:
@@ -352,10 +312,7 @@ def create_paraview_collection_vtu(output_dir, case_name, num_timesteps):
         f.write('</VTKFile>\n')
 
 def convert_to_paraview_vtu(prediction_data, output_dir, case_name):
-    """
-    Convert prediction data to ParaView VTU format
-    Adapted from convert_nn_to_vtu.py functions
-    """
+    """Convert physics-aware predictions to ParaView VTU outputs."""
     print(f" Converting to ParaView VTU format...")
     
     # Create output directory
@@ -413,10 +370,7 @@ def convert_to_paraview_vtu(prediction_data, output_dir, case_name):
     print(f"   Created ParaView collection: {case_name}.pvd")
 
 def create_lbm_input_file(nu, temperature, geometry_file, case_name, template_file="isothermal_cracks.inp"):
-    """
-    Create LBM input file for simulation
-    Reused from validate_neural_network.py
-    """
+    """Create an LBM input file compatible with the physics-aware validation scripts."""
     if not os.path.exists(template_file):
         raise FileNotFoundError(f"Template file not found: {template_file}")
     # Read template lines and perform key-based updates (preserve other formatting)
@@ -464,10 +418,7 @@ def create_lbm_input_file(nu, temperature, geometry_file, case_name, template_fi
     return input_file
 
 def run_lbm_simulation(nu, temperature, geometry_file, case_name, executable_path, timeout, output_dir):
-    """
-    Run LBM simulation with specified parameters
-    Adapted from validate_neural_network.py
-    """
+    """Run an LBM simulation using the same parameters as the physics-aware prediction."""
     print(f" Running LBM simulation...")
     print(f"   Parameters: nu={nu:.6f}, temperature={temperature:.3f}")
     print(f"   Geometry: {os.path.basename(geometry_file)}")
@@ -556,10 +507,10 @@ def print_usage_examples():
     """Print usage examples"""
     print("\n Usage Examples:")
     print("\n1. Basic neural network prediction:")
-    print("   python predict_and_visualize.py --geometry microstructure_nX60_nY40_nZ30_seed1.csv")
+    print("   python predict_and_visualize_physics_aware.py --geometry microstructure_nX60_nY40_nZ30_seed1.csv")
     
     print("\n2. Custom parameters:")
-    print("   python predict_and_visualize.py \\")
+    print("   python predict_and_visualize_physics_aware.py \\")
     print("       --geometry microstructure_nX60_nY40_nZ30_seed6.csv \\")
     print("       --nu 0.005 \\")
     print("       --temperature 0.035 \\")
@@ -567,7 +518,7 @@ def print_usage_examples():
     print("       --output my_prediction")
     
     print("\n3. Neural network + LBM simulation comparison:")
-    print("   python predict_and_visualize.py \\")
+    print("   python predict_and_visualize_physics_aware.py \\")
     print("       --geometry microstructure_geom_3.csv \\")
     print("       --nu 0.00324 \\")
     print("       --temperature 0.045 \\")
@@ -575,7 +526,7 @@ def print_usage_examples():
     print("       --run-lbm")
     
     print("\n4. Custom LBM executable and timeout:")
-    print("   python predict_and_visualize.py \\")
+    print("   python predict_and_visualize_physics_aware.py \\")
     print("       --geometry microstructure_geom_2.csv \\")
     print("       --nu 0.005 \\")
     print("       --temperature 0.035 \\")
@@ -600,32 +551,31 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python predict_and_visualize.py --geometry microstructure_nX60_nY40_nZ30_seed1.csv
-  python predict_and_visualize.py --geometry microstructure_geom_3.csv --nu 0.005 --temperature 0.035
-  python predict_and_visualize.py --geometry microstructure_geom_2.csv --nu 0.005 --temperature 0.035 --run-lbm
+    python predict_and_visualize_physics_aware.py --geometry microstructure_nX60_nY40_nZ30_seed1.csv
+    python predict_and_visualize_physics_aware.py --geometry microstructure_geom_3.csv --nu 0.005 --temperature 0.035
+    python predict_and_visualize_physics_aware.py --geometry microstructure_geom_2.csv --nu 0.005 --temperature 0.035 --run-lbm
         """
     )
-    
-    parser.add_argument('--geometry', type=str, 
-                       help='Geometry CSV file (e.g., microstructure_nX60_nY40_nZ30_seed1.csv)')
+    parser.add_argument('--geometry', type=str,
+                        help='Geometry CSV file (e.g., microstructure_nX60_nY40_nZ30_seed1.csv)')
     parser.add_argument('--nu', type=float, default=0.00324,
-                       help='Viscosity parameter (default: 0.00324, range: 0.00194-0.00810)')
+                        help='Viscosity parameter (default: 0.00324, range: 0.00194-0.00810)')
     parser.add_argument('--temperature', type=float, default=0.035,
-                       help='Temperature parameter (default: 0.035, range: 0.02-0.06)')
+                        help='Temperature parameter (default: 0.035, range: 0.02-0.06)')
     parser.add_argument('--output', type=str, default=None,
-                       help='Output case name (default: auto-generated from parameters)')
+                        help='Output case name (default: auto-generated from parameters)')
     parser.add_argument('--timesteps', type=int, default=11,
-                       help='Number of timesteps to predict (default: 11)')
+                        help='Number of timesteps to predict (default: 11)')
     parser.add_argument('--output-dir', type=str, default='custom_predictions_physics_aware',
-                       help='Output directory (default: custom_predictions_physics_aware)')
+                        help='Output directory (default: custom_predictions_physics_aware)')
     parser.add_argument('--examples', action='store_true',
-                       help='Show usage examples and exit')
+                        help='Show usage examples and exit')
     parser.add_argument('--run-lbm', action='store_true',
-                       help='Also run LBM simulation with same parameters for comparison')
+                        help='Also run LBM simulation with same parameters for comparison')
     parser.add_argument('--executable', type=str, default='marbles3d.gnu.TPROF.MPI.ex',
-                       help='Path to LBM executable (default: marbles3d.gnu.TPROF.MPI.ex)')
+                        help='Path to LBM executable (default: marbles3d.gnu.TPROF.MPI.ex)')
     parser.add_argument('--timeout', type=int, default=3600,
-                       help='LBM simulation timeout in seconds (default: 3600)')
+                        help='LBM simulation timeout in seconds (default: 3600)')
     
     args = parser.parse_args()
     
@@ -636,7 +586,7 @@ Examples:
     if not args.geometry:
         print(" ERROR: --geometry parameter is required!")
         print("\nFor help and examples, run:")
-        print("   python predict_and_visualize.py --examples")
+        print("   python predict_and_visualize_physics_aware.py --examples")
         return
     
     try:
@@ -730,7 +680,7 @@ Examples:
     except Exception as e:
         print(f"\n ERROR: {e}")
         print("\nFor help and examples, run:")
-        print("   python predict_and_visualize.py --examples")
+        print("   python predict_and_visualize_physics_aware.py --examples")
 
 if __name__ == "__main__":
     main()
