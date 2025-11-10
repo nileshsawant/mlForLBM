@@ -1,4 +1,4 @@
-# Create an AI clone of your CFD model
+# Create an AI surrogate of your CFD model
 
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 [![GitHub](https://img.shields.io/badge/GitHub-nileshsawant%2FmlForLBM-blue)](https://github.com/nileshsawant/mlForLBM)
@@ -6,187 +6,172 @@
 ![Velocity Cracks Demo](velocity_cracks.gif)
 *Animation credit: [@eyoung55](https://github.com/eyoung55)*
 
-A complete pipeline for training neural networks to predict flow and temperature fields. Tested for complex crack geometries using Lattice Boltzmann Method simulations. The test case setup in this example is from https://github.com/nileshsawant/marblesThermal/tree/backup-before-reset/Tests/test_files/isothermal_cracks 
+A complete pipeline for training neural networks to predict flow and temperature fields. It can be easily adapted to AMReX based codes and extended to other CFD codes. Tested for complex crack geometries using Lattice Boltzmann Method simulations. The test case setup in this example is from https://github.com/nileshsawant/marblesThermal/tree/main/Tests/test_files/isothermal_cracks .
 
-## Overview
+This repository contains the end-to-end workflow used to build a physics-aware neural surrogate for thermal Lattice Boltzmann simulations in fractured materials. Training data are generated with the AMReX-based `marblesThermal` solver, converted into machine-learning ready tensors, and used to train a TensorFlow/Keras model that predicts velocity, heat flux, density, energy, and temperature fields while respecting sign and range constraints enforced by the network architecture.
 
-This project implements a neural network that learns to predict 5 physics fields (velocity, heat flux, density, energy, temperature) in thermal flow simulations through cracked materials. The approach combines:
+## Key Capabilities
 
-- **Physics-aware activations**: Softplus for positive quantities, tanh for bounded ranges
-- **Physics violations**: Mathematical guarantees prevent negative densities/temperatures
-- **AMReX-based LBM training data**: High-fidelity ground truth simulations
-- **Efficient training**: 20 epochs with manual learning rate scheduling
-- **ParaView visualization**: Direct integration for 3D analysis
-- **Training dataset**: 12,625 samples (125 cases × 101 timesteps)
-- **Perfect generalization**: Maintains physics compliance on unseen geometries
+- Physics-aware activations (softplus / tanh) eliminate negative density, temperature, and energy predictions without extra loss terms.
+- Automated training-data generation for 125 parameter combinations (5 ν values × 5 temperature values × 5 geometries).
+- Validation pipelines for interpolation cases (`validate_neural_network_physics_aware.py`) and an unseen geometry seed (`validate_seed6_minimal_physics_aware.py`) that export metrics, plots, and summary JSON reports.
+- Interactive prediction utility (`predict_and_visualize_physics_aware.py`) with optional AMReX reruns for side-by-side comparisons and ParaView-ready VTU conversion (`convert_nn_to_vtu_physics_aware.py`).
+- JSON summaries keep large validation outputs manageable by storing dataset metadata instead of full 3D arrays.
 
-## Project Structure
+## Repository Tour
 
-```
-mlForLBM/
-├── README.md                                    # This file
-├── isothermal_cracks.inp                       # AMReX/LBM input template
-├── microstructure_geom_*.csv                   # Crack geometries (seeds 1-6)
-├── marbles3d.gnu.TPROF.MPI.ex                 # AMReX LBM executable
-│
-├── generate_training_data_fixed.py             # Generate training data pipeline
-├── process_training_data_for_ml.py             # Convert AMReX → ML format
-├── train_lbm_neural_network_physics_aware.py  # Physics-aware training
-│                                                
-├── validate_neural_network_physics_aware.py   # Validation on seen geometries
-├── validate_seed6_minimal_physics_aware.py    # Validation on unseen geometries
-├── predict_and_visualize_physics_aware.py     # Interactive prediction & visualization
-│
-└── validate_physics_aware_model.py            # Physics violations checker
-```
+| Script / Folder | Purpose |
+| --- | --- |
+| `generate_training_data_fixed.py` | Creates `.inp` files for the 5×5×5 parameter sweep and stages AMReX runs. |
+| `process_training_data_for_ml.py` | Converts AMReX plotfiles into ML tensors (NPZ/HDF5/CSV) and records metadata. |
+| `train_lbm_neural_network_physics_aware.py` | Trains the physics-aware 3D CNN (default: 20 epochs with manual LR schedule). |
+| `validate_neural_network_physics_aware.py` | Runs interpolation validation, saves plots to `validation_physics_aware/plots`, and writes `physics_aware_validation_report.json`. |
+| `validate_seed6_minimal_physics_aware.py` | Repeats the validation workflow on geometry seed 6 and writes the generalization report. |
+| `predict_and_visualize_physics_aware.py` | Generates predictions for a chosen geometry/parameter set and can launch an AMReX comparison run. |
+| `convert_nn_to_vtu_physics_aware.py` | Converts NPZ prediction bundles into ParaView VTU files for inspection. |
+| `validation_physics_aware/`, `validation_seed6_physics_aware/` | Contain latest validation artifacts, plots, summary JSON, and VTU outputs. |
 
-## Quick Start
+Additional notes and archived analysis live in `PHYSICS_AWARE_IMPROVEMENTS.md`, `VALIDATION_RESULTS_SUMMARY.md`, and related documents in the repository root.
 
-### Prerequisites
+## Environment Setup
+
+The workflow was developed with Python 3.9 inside a conda environment named `marbles_ml`.
 
 ```bash
-# Create conda environment
 conda create -n marbles_ml python=3.9
 conda activate marbles_ml
 
-# Install dependencies
+# Core dependencies
 conda install tensorflow numpy pandas matplotlib seaborn scikit-learn
 conda install -c conda-forge yt h5py
+
+# Optional: upgrade TensorFlow or install GPU builds as needed
 pip install --upgrade tensorflow
 ```
 
-### 1. Generate Training Data
+Running AMReX simulations requires the `marbles3d.gnu.TPROF.MPI.ex` executable present in the repo root (compiled from the `marblesThermal/` source). The helper scripts assume they are invoked from the repository directory.
 
-```bash
-python generate_training_data_fixed.py
-python process_training_data_for_ml.py
+## Workflow
+
+1. **Generate LBM cases and run simulations**
+
+   ```bash
+   python generate_training_data_fixed.py
+   ```
+
+   Creates 125 case directories (5×5×5 sweep), generates geometries via `genCracks`, copies the solver, and then calls `run_all_simulations()` to execute `marbles3d.gnu.TPROF.MPI.ex isothermal_cracks.inp` inside each case. Plotfiles (`plt*`) will be written into the case folders.
+
+2. **Convert training data**
+
+   ```bash
+   python process_training_data_for_ml.py
+   ```
+
+   Reads the plotfiles, extracts fields with `yt`, and writes compressed tensors in `ml_training_data/` alongside CSV summaries and metadata JSON.
+
+3. **Train the surrogate**
+
+   ```bash
+   python train_lbm_neural_network_physics_aware.py
+   ```
+
+   Loads the processed tensors, trains for 20 epochs (default batch size 8), saves `lbm_flow_predictor_physics_aware.h5`, and exports `physics_aware_normalization_params.json` plus a `training_loss_physics_aware.png` curve.
+
+4. **Validate**
+
+   ```bash
+   python validate_neural_network_physics_aware.py
+   python validate_seed6_minimal_physics_aware.py
+   ```
+
+   Each script runs the AMReX solver as needed, generates neural predictions, compares them with LBM outputs, logs physics-violation checks, and writes plots plus a compact `physics_aware_*_validation_report.json` with metrics and dataset summaries.
+
+5. **Predict & visualize**
+
+   ```bash
+   python predict_and_visualize_physics_aware.py --geometry 3 --nu 0.003 --temperature 0.035
+   python predict_and_visualize_physics_aware.py --geometry 3 --nu 0.003 --temperature 0.035 --run-lbm
+   ```
+
+   Produces NPZ bundles under `custom_predictions_physics_aware/`. Use `convert_nn_to_vtu_physics_aware.py` to obtain VTU files for ParaView.
+
+6. **Convert predictions to ParaView VTU**
+
+   ```bash
+   python convert_nn_to_vtu_physics_aware.py
+   ```
+
+   Finds neural-network prediction archives in `validation_physics_aware/`, `validation_seed6_physics_aware/`, and `custom_predictions_physics_aware/`, then writes matching `paraview_vtu/` directories for inspection in ParaView.
+
+## Outputs and Metrics
+
+- **Validation reports** (`validation_physics_aware/physics_aware_validation_report.json`, `validation_seed6_physics_aware/physics_aware_generalization_validation_report.json`)
+  - Store per-case metrics: MSE, RMSE, MAE, R², mean relative error, max absolute error for each field.
+  - Include lightweight `lbm_summary` and `nn_summary` sections with timestep ranges and array shapes instead of raw voxel data.
+- **Plots**
+  - Overall metric comparisons across physics fields.
+  - Temporal evolution plots for each case showing MSE and R² per timestep.
+- **Generated VTUs**
+  - Located in `paraview_vtu/` subfolders beside prediction bundles for quick visualization.
+
+## Physics-Aware Model
+
+`train_lbm_neural_network_physics_aware.py` builds a compact 3D encoder–decoder that fuses geometry voxels with simulation parameters:
+
+| Stage | Layers | Kernel / stride | Purpose |
+| --- | --- | --- | --- |
+| Geometry encoder | Conv3D → BN → ReLU (16 channels) | `3×3×3`, stride 1 | Looks at each voxel and its 26 neighbours to learn local crack patterns. |
+| | Conv3D → BN → ReLU (24) + MaxPool3D | `3×3×3`, stride 1 → pooling `2×2×2` | Extracts richer features then halves the grid size to reduce cost. |
+| | Conv3D → BN → ReLU (32) | `3×3×3`, stride 1 | Continues capturing neighbourhood interactions on the coarser grid. |
+| | Conv3D → BN → ReLU (32) + MaxPool3D | `3×3×3`, stride 1 → pooling `2×2×2` | Further compresses spatial dimensions to `(15,10,7)` before global pooling. |
+| Parameter tower | Dense 16 → Dense 32 (ReLU + dropout) | n/a | Encodes `[nu, temperature, alpha, normalized_time]` into a compact vector. |
+| Fusion | Concatenate → Dense 128 → Dense (15×10×7×16) | n/a | Mixes geometry and parameter context, then reshapes back to a small 3D feature block. |
+| Decoder | Conv3DTranspose 32 → BN → ReLU, UpSample | `3×3×3`, stride 1 → upsample `2×2×2` | Expands the spatial grid while blending neighbouring context. |
+| | Conv3D 24 → BN → ReLU, UpSample | `3×3×3`, stride 1 → upsample `2×2×2` | Restores the original `(60,40,30)` resolution. |
+| | ZeroPadding3D depth + Conv3D 16 → BN → ReLU | `3×3×3`, stride 1 | Aligns depth and produces a refined shared feature map. |
+| Output heads | Conv3D (velocity/heat flux) | `1×1×1`, stride 1 | Acts like a per-voxel linear layer that mixes the 16-channel features into 3 bounded components (tanh). |
+| | Conv3D (density/energy/temperature) | `1×1×1`, stride 1 | Same idea but outputs a single positive scalar per voxel via softplus. |
+
+Why both kernel sizes? The `3×3×3` convolutions gather information from a voxel and its neighbours, so the receptive field grows as the network deepens. Once that shared feature map is built, the `1×1×1` convolutions simply apply a physics-aware activation to each voxel independently—no extra spatial mixing is needed because all the context has already been captured upstream.
+
+**Outputs:**
+
+   ```python
+   velocity   = Conv3D(3, (1, 1, 1), activation="tanh",     name="velocity")(shared)
+   heat_flux  = Conv3D(3, (1, 1, 1), activation="tanh",     name="heat_flux")(shared)
+   density    = Conv3D(1, (1, 1, 1), activation="softplus", name="density")(shared)
+   energy     = Conv3D(1, (1, 1, 1), activation="softplus", name="energy")(shared)
+   temperature= Conv3D(1, (1, 1, 1), activation="softplus", name="temperature")(shared)
+   ```
+
+Every convolutional layer in the encoder/decoder uses a `3×3×3` receptive field (except the `1×1×1` output heads). Softplus activations enforce positive density/energy/temperature, while tanh bounds velocity and heat flux. The `ActivationPhysicsMetrics` callback samples validation batches each epoch to verify these constraints stay satisfied.
+
+## Directory Layout ( abridged )
+
+```text
+mlForLBM/
+├── README.md
+├── isothermal_cracks.inp
+├── marbles3d.gnu.TPROF.MPI.ex
+├── generate_training_data_fixed.py
+├── process_training_data_for_ml.py
+├── train_lbm_neural_network_physics_aware.py
+├── validate_neural_network_physics_aware.py
+├── validate_seed6_minimal_physics_aware.py
+├── predict_and_visualize_physics_aware.py
+├── convert_nn_to_vtu_physics_aware.py
+├── training_data/
+├── ml_training_data/
+├── validation_physics_aware/
+├── validation_seed6_physics_aware/
+└── custom_predictions_physics_aware/
 ```
 
-This creates 125 LBM simulation cases with varying:
-- Viscosity (nu): 5 values
-- Temperature: 5 values  
-- Crack geometries: 5 different seeds
+## Utilities
 
-### 2. Train Neural Network
-
-```bash
-python train_lbm_neural_network_physics_aware.py
-```
-
-Trains the physics-aware model with:
-- **Smart activations**: Softplus for positive quantities, tanh for bounded ranges
-- **20 epochs**: Manual learning rate reduction every 5 epochs
-- **Zero violations**: Mathematical guarantee of physics compliance
-
-### 3. Validate Model
-
-```bash
-# Validation on seen geometries
-python validate_neural_network_physics_aware.py
-
-# Validation on unseen geometry (generalization test)
-python validate_seed6_minimal_physics_aware.py
-```
-
-### 4. Generate Predictions and Visualize
-
-```bash
-# Interactive prediction with visualization
-python predict_and_visualize_physics_aware.py --geometry 3 --nu 0.003 --temperature 0.035
-
-# With LBM comparison
-python predict_and_visualize_physics_aware.py --geometry 3 --nu 0.003 --temperature 0.035 --run-lbm
-```
-
-## Physics-Aware Architecture
-
-The physics-aware neural network solves the fundamental problem of physics violations through smart activation functions:
-
-**Activation Functions**
-
-```python
-# Physics-aware output layers
-density_output = Conv3D(1, (1,1,1), activation='softplus', name='density')(features)
-energy_output = Conv3D(1, (1,1,1), activation='softplus', name='energy')(features)  
-temperature_output = Conv3D(1, (1,1,1), activation='softplus', name='temperature')(features)
-
-velocity_output = Conv3D(3, (1,1,1), activation='tanh', name='velocity')(features)
-heat_flux_output = Conv3D(3, (1,1,1), activation='tanh', name='heat_flux')(features)
-```
-
-**Mathematical Guarantees:**
-- **Softplus**: `log(1 + exp(x))` ensures density, energy, temperature > 0
-- **Tanh**: `tanh(x)` bounds velocity and heat flux to [-1, +1] range
-- **No loss function penalties needed**: Physics compliance by design
-
-### Training Efficiency
-
-**Optimized Learning Schedule:**
-- Learning rate reduction every 5 epochs  
-- Manual schedule: 0.001 → 0.0005 → 0.00025 → 0.000125
-
-
-**Features:**
-- Automatic geometry ID conversion (3 → microstructure_geom_3.csv)
-- Real-time physics violations monitoring (should always be 0%)
-- Side-by-side neural network vs LBM comparison
-- ParaView-ready VTU output
-
-## Technical Details
-
-### Physics-Aware Architecture
-
-The physics-aware model uses smart activation functions to guarantee physics compliance:
-
-```python
-# 3D CNN feature extraction
-geometry_input = Input((60, 40, 30, 1))  # 3D crack geometry
-params_input = Input((4,))                # [nu, T, alpha, time]
-
-# Efficient encoder-decoder architecture
-x = Conv3D(8, (3,3,3), activation='relu')(geometry_input)
-x = Conv3D(16, (3,3,3), activation='relu')(x)
-# ... (encoder-decoder layers)
-
-# PHYSICS-AWARE OUTPUT BRANCHES with smart activations
-velocity_out = Conv3D(3, (1,1,1), activation='tanh', name='velocity')(shared_features)
-heat_flux_out = Conv3D(3, (1,1,1), activation='tanh', name='heat_flux')(shared_features)
-density_out = Conv3D(1, (1,1,1), activation='softplus', name='density')(shared_features)
-energy_out = Conv3D(1, (1,1,1), activation='softplus', name='energy')(shared_features)
-temperature_out = Conv3D(1, (1,1,1), activation='softplus', name='temperature')(shared_features)
-```
-
-## Model Output
-
-The physics-aware model predicts 5 thermal flow fields:
-
-1. **Velocity**: 3D flow velocity field (tanh bounded)
-2. **Heat Flux**: 3D thermal flux field (tanh bounded)  
-3. **Density**: Fluid density field (softplus positive)
-4. **Energy**: Total energy field (softplus positive)
-5. **Temperature**: Temperature field (softplus positive)
-
-## Applications
-
-- Fast thermal flow analysis in cracked materials
-- Material design and optimization studies  
-- Digital twins for real-time predictions
-- Engineering simulation with guaranteed physics compliance
-
-## Summary
-
-This physics-aware neural network successfully predicts thermal flow fields in cracked materials with guaranteed physics compliance. The model achieves no physics violations while maintaining fast inference times, making it suitable for real-time engineering applications.
-
-### Getting Started
-
-Train the physics-aware model, run validation tests, and create interactive predictions using the provided scripts. All models maintain physics compliance by design while delivering accurate thermal flow predictions for complex crack geometries.
-
-### Validation Strategy
-
-- **Interpolation test**: Parameters between training points, same geometry types
-- **Extrapolation test**: Completely unseen crack geometry (seed 6)
-- **Metrics**: MSE, MAE, R², relative error, correlation
-- **Visualization**: Field comparisons, temporal evolution, error distributions
+- `validate_physics_aware_model.py` checks trained checkpoints for activation-induced physics violations.
+- `preview_training_data.py` and `verify_training_data.py` offer quick sanity checks on generated datasets.
+- `cleanup_training_data.py` removes intermediate AMReX artifacts if storage becomes a concern.
 
 ## Citation
 
@@ -200,64 +185,23 @@ If you use this code, please cite:
   url={https://github.com/nileshsawant/mlForLBM},
   version={0.1},
   month={10},
-  keywords={machine learning, computational fluid dynamics, lattice boltzmann method, physics-informed neural networks, thermal flow, crack analysis}
+  keywords={machine learning, computational fluid dynamics, lattice boltzmann method, physics-aware neural networks, thermal flow}
 }
 ```
 
 ## License
 
-This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License**.
-
-### What this means:
-
-** You ARE allowed to:**
-- Use this code for research, education, and personal projects
-- Share and redistribute the code
-- Modify and adapt the code for your needs
-- Build upon this work
-
-** You are NOT allowed to:**
-- Use this code for commercial purposes
-- Sell products or services based on this code
-
-** Attribution Requirements:**
-When using this code, you must:
-- Credit the original author: **Nilesh Sawant**
-- Link to this repository: `https://github.com/nileshsawant/mlForLBM`
-- Indicate if you made changes to the original code
-
-For full terms, see: https://creativecommons.org/licenses/by-nc/4.0/
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License**. You may use, share, and adapt the materials for non-commercial purposes with attribution to **Nilesh Sawant**. Commercial use is not permitted. See <https://creativecommons.org/licenses/by-nc/4.0/> for details.
 
 ## Contact
 
 - **Author**: Nilesh Sawant
-- **GitHub**: https://github.com/nileshsawant
-- **Project**: https://github.com/nileshsawant/mlForLBM
+- **GitHub**: <https://github.com/nileshsawant>
+- **Project**: <https://github.com/nileshsawant/mlForLBM>
 
 ## Acknowledgments
 
-- AMReX framework for LBM simulations
-- TensorFlow/Keras for neural networks
-- yt-project for data processing
-- ParaView for visualization
-
-## Tools: Converting NN predictions to ParaView VTU
-
-A helper script was added to convert saved neural-network predictions (.npz) into
-ParaView-friendly VTU files. It supports the physics-aware outputs and custom
-predictions created by `predict_and_visualize_physics_aware.py`.
-
-Usage:
-
-```bash
-# Convert physics-aware validation and custom predictions
-python3 convert_nn_to_vtu_physics_aware.py
-```
-
-It will look for prediction files in:
-
-- `validation_physics_aware/neural_network_predictions`
-- `validation_seed6_physics_aware/neural_network_predictions`
-- `custom_predictions_physics_aware`
-
-And write VTU outputs into corresponding `paraview_vtu/` subfolders.
+- AMReX (`marblesThermal`) for the reference LBM solver.
+- TensorFlow / Keras for model development.
+- `yt-project` for handling AMReX plotfiles.
+- ParaView for visualization of VTU outputs.

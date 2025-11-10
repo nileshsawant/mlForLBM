@@ -24,9 +24,12 @@ import os
 import sys
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use("Agg")  # Use non-interactive backend for headless runs
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
+from datetime import datetime
 import subprocess
 import json
 import h5py
@@ -36,6 +39,37 @@ from tensorflow import keras
 
 # Add current directory to path for imports
 sys.path.append('.')
+
+def summarize_simulation_dataset(dataset):
+    """Return compact metadata for large simulation outputs to keep reports light."""
+    if not dataset:
+        return None
+
+    summary = {
+        'num_timesteps': len(dataset.get('timesteps', [])),
+    }
+
+    timesteps = dataset.get('timesteps', [])
+    if timesteps:
+        ts_array = np.asarray(timesteps, dtype=float)
+        summary['timestep_range'] = {
+            'min': float(np.min(ts_array)),
+            'max': float(np.max(ts_array)),
+        }
+        summary['sample_timesteps'] = [float(ts_array[0]), float(ts_array[len(ts_array)//2]), float(ts_array[-1])] if len(ts_array) >= 3 else [float(val) for val in ts_array]
+
+    field_shapes = {}
+    for key in ['velocity_fields', 'heat_flux_fields', 'density_fields', 'energy_fields', 'temperature_fields']:
+        value = dataset.get(key)
+        if isinstance(value, np.ndarray):
+            field_shapes[key] = list(value.shape)
+        elif isinstance(value, list) and value and hasattr(value[0], 'shape'):
+            field_shapes[key] = [len(value)] + list(value[0].shape)
+
+    if field_shapes:
+        summary['field_shapes'] = field_shapes
+
+    return summary
 
 # --- Ensure geometry for seed 6 is generated ---
 def ensure_seed6_geometry():
@@ -303,67 +337,29 @@ def load_enhanced_trained_model():
     
     CHANGE: Specifically looks for physics-aware model files first
     """
-    # PHYSICS-AWARE MODEL FILES (prioritized)
-    physics_aware_model_files = [
+    physics_aware_model_files = (
         'lbm_flow_predictor_physics_aware.h5',
-        'best_physics_aware_model.h5'
-    ]
-    
-    # Fallback to enhanced/baseline models if physics-aware not found
-    fallback_model_files = [
-        'lbm_flow_predictor_cno-inspired_enhanced.h5',
-        'lbm_flow_predictor_cno_inspired_enhanced.h5', 
-        'lbm_flow_predictor_enhanced.h5',
-        'lbm_flow_predictor_cno-inspired.h5',
-        'lbm_flow_predictor_cno_inspired.h5', 
-        'lbm_flow_predictor.h5'
-    ]
-    
-    all_model_files = physics_aware_model_files + fallback_model_files
-    
-    for i, model_file in enumerate(all_model_files):
-        if os.path.exists(model_file):
-            model_type = " PHYSICS-AWARE" if i < len(physics_aware_model_files) else "  FALLBACK"
-            print(f" Loading trained model: {model_file} ({model_type})")
-            
-            try:
-                # Try loading without compiling (avoid custom loss function issues)
-                model = keras.models.load_model(model_file, compile=False)
-                return model, model_type
-            except Exception as e:
-                print(f"     Direct loading failed: {e}")
-                print("    Attempting to rebuild model and load weights...")
-                
-                try:
-                    # Import the model creation function
-                    sys.path.append('.')
-                    
-                    # Try to recreate the CNO model that was likely saved
-                    from train_lbm_neural_network_enhanced import create_ultra_efficient_cno_model
-                    
-                    # Recreate the model architecture
-                    model = create_ultra_efficient_cno_model()
-                    
-                    # Load only the weights
-                    model.load_weights(model_file)
-                    print(f"     Successfully loaded weights into rebuilt model")
-                    return model, model_type
-                    
-                except Exception as e2:
-                    print(f"    Weight loading failed: {e2}")
-                    
-                    # Try the efficient CNN model instead
-                    try:
-                        from train_lbm_neural_network_enhanced import create_lbm_cnn_model
-                        model = create_lbm_cnn_model()
-                        model.load_weights(model_file)
-                        print(f"     Successfully loaded weights into CNN model")
-                        return model, model_type
-                    except Exception as e3:
-                        print(f"    CNN weight loading failed: {e3}")
-                        continue
-    
-    raise FileNotFoundError(" No enhanced model could be loaded! Please run enhanced training first.")
+        'best_physics_aware_model.h5',
+    )
+
+    for model_file in physics_aware_model_files:
+        if not os.path.exists(model_file):
+            continue
+
+        print(f" Loading trained model: {model_file} ( PHYSICS-AWARE)")
+
+        try:
+            model = keras.models.load_model(model_file, compile=False)
+        except Exception as load_error:
+            raise RuntimeError(
+                f"Failed to load physics-aware model '{model_file}'."
+            ) from load_error
+
+        return model, " PHYSICS-AWARE"
+
+    raise FileNotFoundError(
+        " No physics-aware model found. Run train_lbm_neural_network_physics_aware.py first."
+    )
 
 def predict_with_neural_network(model, case_info, timesteps):
     """
@@ -749,21 +745,44 @@ def save_validation_report(validation_results, report_file="validation_seed6_phy
     """
     print(f" Saving enhanced GENERALIZATION validation report: {report_file}")
     
-    # Convert numpy arrays to lists for JSON serialization
+    report_dir = os.path.dirname(report_file) or '.'
+    os.makedirs(report_dir, exist_ok=True)
+
     def convert_arrays(obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
-        elif isinstance(obj, dict):
+        if isinstance(obj, (np.generic,)):
+            return obj.item()
+        if isinstance(obj, dict):
             return {k: convert_arrays(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
+        if isinstance(obj, list):
             return [convert_arrays(item) for item in obj]
-        else:
-            return obj
-    
-    report_data = convert_arrays(validation_results)
-    
+        return obj
+
+    report_payload = {
+        'generated_at': datetime.utcnow().isoformat() + 'Z',
+        'case_count': len(validation_results),
+        'cases': []
+    }
+
+    for case_result in validation_results:
+        case_info = case_result.get('case_info') or case_result['metrics'].get('case_info')
+        case_payload = {
+            'case_info': case_info,
+            'metrics': case_result['metrics'],
+        }
+
+        if case_result.get('lbm_summary') is not None:
+            case_payload['lbm_summary'] = case_result['lbm_summary']
+        if case_result.get('nn_summary') is not None:
+            case_payload['nn_summary'] = case_result['nn_summary']
+
+        report_payload['cases'].append(case_payload)
+
+    report_data = convert_arrays(report_payload)
+
     with open(report_file, 'w') as f:
-        json.dump(report_data, f, indent=2, default=str)
+        json.dump(report_data, f, indent=2)
     
     print(f"     Enhanced GENERALIZATION validation report saved")
 
@@ -824,10 +843,12 @@ def main():
             
             validation_results.append({
                 'case_info': case_info,
-                'lbm_data': lbm_data,
-                'nn_data': nn_data,
-                'metrics': metrics
+                'metrics': metrics,
+                'lbm_summary': summarize_simulation_dataset(lbm_data),
+                'nn_summary': summarize_simulation_dataset(nn_data)
             })
+            del lbm_data
+            del nn_data
             
             print(f"     Case {case_info['case_id']} enhanced GENERALIZATION validation completed")
             
